@@ -1,0 +1,24 @@
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Copilot / AI agent config
+.claude/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dependency dirs (if a build step is ever added)
+node_modules/
+
+# Build output (if a bundler is ever added)
+dist/
+build/
+
+# Env / secrets
+.env
+.env.local

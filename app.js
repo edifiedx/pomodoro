@@ -2,7 +2,14 @@
 
 let tickId  = null;
 let alarmId = null;
+let alarmAutoEndId = null;
 let _firstStart = true;
+
+function settlePausedTime() {
+  if (!S.pauseStartedAt) return;
+  S.pausedMs += Date.now() - S.pauseStartedAt;
+  S.pauseStartedAt = null;
+}
 
 function startTimer() {
   if (S.running || S.alarmPending) return;
@@ -10,6 +17,7 @@ function startTimer() {
     S._notifRequested = true;
     Notification.requestPermission().then(updateNotifStatus);
   }
+  settlePausedTime();
   if (!S.phaseStartTime) S.phaseStartTime = Date.now();
   S.phaseEndTime = Date.now() + S.remainingSec * 1000;
   S.running = true;
@@ -22,6 +30,7 @@ function pauseTimer() {
   S.remainingSec = Math.max(0, Math.ceil((S.phaseEndTime - Date.now()) / 1000));
   S.phaseEndTime = null;
   S.running = false;
+  S.pauseStartedAt = Date.now();
   clearTimeout(tickId);
   tickId = null;
   refreshUI();
@@ -42,11 +51,70 @@ function tick() {
   else scheduleTick();
 }
 
+function clearAlarmAutoEnd() {
+  clearTimeout(alarmAutoEndId);
+  alarmAutoEndId = null;
+}
+
+function armAlarmAutoEnd() {
+  clearAlarmAutoEnd();
+  if (!S.alarmPending || CFG.alarmAutoEndMins <= 0) return;
+  alarmAutoEndId = setTimeout(() => {
+    if (!S.alarmPending) return;
+    dismissAlarm();
+    advancePhase();
+    refreshUI();
+    showToast('Session ended');
+  }, CFG.alarmAutoEndMins * 60 * 1000);
+}
+
+function recordPartialPhase() {
+  if (!S.phaseStartTime) return;
+  const elapsed = Math.round((Date.now() - S.phaseStartTime) / 1000);
+  if (S.phase === 'work' && elapsed >= 120) {
+    dbAdd({
+      type: S.phase,
+      startTime: S.phaseStartTime,
+      endTime: Date.now(),
+      plannedDuration: S.totalSec,
+      actualDuration: elapsed,
+      pausedDuration: Math.round(S.pausedMs / 1000),
+      completed: false,
+      snoozedFor: 0,
+      label: S.currentLabel,
+    }).catch(() => {});
+  }
+}
+
+function endSession() {
+  pauseTimer();
+  settlePausedTime();
+
+  if (S.alarmPending) {
+    dismissAlarm();
+    advancePhase();
+    refreshUI();
+    playClick();
+    showToast('Session ended');
+    return;
+  }
+
+  recordPartialPhase();
+  S.phaseStartTime = null;
+  S.pauseStartedAt = null;
+  S.pausedMs       = 0;
+  S.remainingSec   = S.totalSec;
+  refreshUI();
+  playClick();
+  showToast('Session ended');
+}
+
 async function phaseComplete() {
   clearTimeout(tickId);
   tickId = null;
   S.running = false;
   S.remainingSec = 0;
+  settlePausedTime();
   refreshUI();
 
   const now   = Date.now();
@@ -57,11 +125,14 @@ async function phaseComplete() {
     endTime:         now,
     plannedDuration: S.totalSec,
     actualDuration:  Math.round((now - start) / 1000),
+    pausedDuration:  Math.round(S.pausedMs / 1000),
     completed:       true,
     snoozedFor:      0,
     label:           S.phase === 'work' ? S.currentLabel : '',
   }).catch(() => {});
   S.phaseStartTime = null;
+  S.pausedMs = 0;
+  S.pauseStartedAt = null;
 
   if (S.phase === 'work') {
     S.cycleWorkDone++;
@@ -87,6 +158,7 @@ async function phaseComplete() {
     refreshUI();
     playAlarm();
     armAlarm();
+    armAlarmAutoEnd();
   }
 }
 
@@ -104,6 +176,7 @@ function dismissAlarm() {
   S.alarmPending = false;
   clearInterval(alarmId);
   alarmId = null;
+  clearAlarmAutoEnd();
   if (S.alarmStartTime) {
     dbPatchLastSnoozed(Math.round((Date.now() - S.alarmStartTime) / 1000));
     S.alarmStartTime = null;
@@ -127,6 +200,10 @@ function advancePhase() {
 function setPhase(phase) {
   S.phase          = phase;
   S.phaseStartTime = null;
+  S.pauseStartedAt = null;
+  S.pausedMs       = 0;
+  S.alarmStartTime = null;
+  clearAlarmAutoEnd();
   S.totalSec       = { 'work': CFG.workMins, 'short-break': CFG.shortBreakMins, 'long-break': CFG.longBreakMins }[phase] * 60;
   S.remainingSec   = S.totalSec;
   refreshUI();
@@ -134,16 +211,21 @@ function setPhase(phase) {
 
 /* ── Button handlers ── */
 
+function triggerStarTransition() {
+  if (!window.starCollapse) return;
+  window.starCollapse();
+  setTimeout(() => {
+    if (window.starErupt) window.starErupt();
+  }, 2650);
+}
+
 function onMainBtn() {
   if (S.alarmPending) {
     dismissAlarm();
     advancePhase();
     startTimer();
     playClick();
-    if (window.starCollapse) {
-      window.starCollapse();
-      setTimeout(() => { if (window.starErupt) window.starErupt(); }, 2650);
-    }
+    triggerStarTransition();
     return;
   }
   if (S.running) { pauseTimer(); playClick(); }
@@ -155,28 +237,30 @@ function onMainBtn() {
 
 function resetTimer() {
   pauseTimer();
+  settlePausedTime();
   dismissAlarm();
   S.phaseStartTime = null;
+  S.pauseStartedAt = null;
+  S.pausedMs       = 0;
   S.remainingSec   = S.totalSec;
   refreshUI();
   playClick();
 }
 
+function onAuxBtn() {
+  if (S.running || S.alarmPending || S.remainingSec < S.totalSec) endSession();
+  else resetTimer();
+}
+
 function skipPhase() {
   pauseTimer();
+  settlePausedTime();
   dismissAlarm();
 
-  if (S.phase === 'work' && S.phaseStartTime) {
-    const elapsed = Math.round((Date.now() - S.phaseStartTime) / 1000);
-    if (elapsed >= 120) {
-      dbAdd({
-        type: 'work', startTime: S.phaseStartTime, endTime: Date.now(),
-        plannedDuration: S.totalSec, actualDuration: elapsed,
-        completed: false, snoozedFor: 0, label: S.currentLabel,
-      }).catch(() => {});
-    }
-  }
+  recordPartialPhase();
   S.phaseStartTime = null;
+  S.pauseStartedAt = null;
+  S.pausedMs       = 0;
 
   if (S.phase === 'work' && S.remainingSec < S.totalSec / 2) {
     S.cycleWorkDone++;
@@ -186,8 +270,10 @@ function skipPhase() {
   }
 
   advancePhase();
+  startTimer();
   refreshUI();
   playClick();
+  triggerStarTransition();
 }
 
 /* ── Toggle handlers ── */
@@ -241,6 +327,7 @@ function applySettings() {
   CFG.longBreakMins      = clamp('cfgLong',     1, 120);
   CFG.sessionsBeforeLong = clamp('cfgSessions', 2,   8);
   CFG.snoozeIntervalSec  = clamp('cfgSnooze',  10, 300);
+  CFG.alarmAutoEndMins   = clamp('cfgAutoEnd',  0, 240);
 
   pauseTimer();
   dismissAlarm();
@@ -277,6 +364,7 @@ function loadPrefs() {
     if (p.longBreakMins != null)      CFG.longBreakMins      = p.longBreakMins;
     if (p.sessionsBeforeLong != null) CFG.sessionsBeforeLong = p.sessionsBeforeLong;
     if (p.snoozeIntervalSec != null)  CFG.snoozeIntervalSec  = p.snoozeIntervalSec;
+    if (p.alarmAutoEndMins != null)   CFG.alarmAutoEndMins   = p.alarmAutoEndMins;
     if (p.dotMode != null)            CFG.dotMode            = p.dotMode;
     if (p.toastsEnabled != null)      CFG.toastsEnabled      = p.toastsEnabled;
     if (p.totalWorkEver != null)      S.totalWorkEver        = p.totalWorkEver;
@@ -291,6 +379,7 @@ function loadPrefs() {
     document.getElementById('cfgLong').value     = CFG.longBreakMins;
     document.getElementById('cfgSessions').value = CFG.sessionsBeforeLong;
     document.getElementById('cfgSnooze').value   = CFG.snoozeIntervalSec;
+    document.getElementById('cfgAutoEnd').value  = CFG.alarmAutoEndMins;
   } catch(e) {}
 }
 
@@ -305,7 +394,7 @@ document.addEventListener('keydown', e => {
       if (S.alarmPending) onMainBtn(); else skipPhase(); break;
     case 'r': case 'R':      resetTimer(); break;
     case 'Escape':
-      if (S.alarmPending) { dismissAlarm(); advancePhase(); refreshUI(); } break;
+      if (S.alarmPending) { endSession(); } break;
   }
 });
 

@@ -21,6 +21,7 @@ const CFG = {
   longBreakMins:      15,
   sessionsBeforeLong: 4,
   snoozeIntervalSec:  60,
+  alarmAutoEndMins:   0,
   dotMode:            'cycle',
   toastsEnabled:      true,
 };
@@ -36,6 +37,8 @@ const S = {
   totalSec:        25 * 60,
   phaseStartTime:  null,
   alarmStartTime:  null,
+  pauseStartedAt:  null,
+  pausedMs:        0,
   currentLabel:    DEFAULT_LABEL,
   advanceMode:     'manual',
   alarmStyle:      'snooze',

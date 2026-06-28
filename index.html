@@ -156,6 +156,16 @@
       height: 300px;
       flex-shrink: 0;
       overflow: visible;
+      animation: burnDrift 97s ease-in-out infinite;
+    }
+
+    @keyframes burnDrift {
+      0%   { transform: translate(  0px,  0px); }
+      20%  { transform: translate(  3px,  2px); }
+      45%  { transform: translate( -2px,  4px); }
+      70%  { transform: translate(  2px, -3px); }
+      85%  { transform: translate( -3px, -1px); }
+      100% { transform: translate(  0px,  0px); }
     }
 
     .ring-svg {
@@ -217,6 +227,14 @@
     @keyframes diskShimII { 0%,100% { opacity:.48 } 50% { opacity:.70 } }
     @keyframes diskShimM  { 0%,100% { opacity:.36 } 50% { opacity:.54 } }
     @keyframes diskShimO  { 0%,100% { opacity:.16 } 50% { opacity:.26 } }
+
+    .disk-iii { stroke-width: 1.0;  animation: diskShimIII 10s ease-in-out infinite 0.5s backwards; }
+    .disk-iv  { stroke-width: 0.7;  animation: diskShimIV  12s ease-in-out infinite 1.8s backwards; }
+    .disk-v   { stroke-width: 0.45; animation: diskShimV    8s ease-in-out infinite 3.2s backwards; }
+
+    @keyframes diskShimIII { 0%,100% { opacity:.28 } 50% { opacity:.44 } }
+    @keyframes diskShimIV  { 0%,100% { opacity:.18 } 50% { opacity:.30 } }
+    @keyframes diskShimV   { 0%,100% { opacity:.10 } 50% { opacity:.16 } }
 
     /* Ambient disk halos — wide diffuse glow behind main ring */
     .ring-halo {
@@ -392,6 +410,120 @@
     .chart-bar.today { opacity: 1; background: var(--accent); }
     .chart-day { font-family: 'IBM Plex Sans', sans-serif; font-size: 8px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--nebula); }
 
+    .whatsnew-card { margin-bottom: 20px; }
+    .wn-version {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 2px;
+      color: var(--star);
+      margin-bottom: 14px;
+    }
+    .wn-section + .wn-section { margin-top: 16px; }
+    .wn-section-title {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--nebula);
+      margin-bottom: 8px;
+    }
+    .wn-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .wn-item {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--star);
+      border-left: 1px solid var(--rim);
+      padding-left: 10px;
+    }
+    .wn-empty {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 11px;
+      color: var(--nebula);
+    }
+
+    .delay-card { margin-bottom: 20px; }
+    .delay-legend {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .delay-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--nebula);
+    }
+    .delay-swatch {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .delay-swatch.ontime { background: var(--nebula); opacity: 0.5; }
+    .delay-swatch.delayed { background: var(--accent); }
+    .delay-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .delay-row {
+      display: grid;
+      grid-template-columns: 88px 1fr 44px;
+      gap: 10px;
+      align-items: center;
+    }
+    .delay-phase {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--star);
+    }
+    .delay-track {
+      height: 10px;
+      border: 1px solid var(--rim);
+      display: flex;
+      overflow: hidden;
+      background: rgba(255,255,255,0.02);
+    }
+    .delay-fill-ontime,
+    .delay-fill-delayed {
+      height: 100%;
+      min-width: 0;
+      transition: width 0.25s ease;
+    }
+    .delay-fill-ontime { background: var(--nebula); opacity: 0.45; }
+    .delay-fill-delayed { background: var(--accent); }
+    .pause-fill {
+      height: 100%;
+      min-width: 0;
+      transition: width 0.25s ease;
+      background: linear-gradient(90deg, rgba(91,168,212,0.35), rgba(91,168,212,0.8));
+    }
+    .delay-meta {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--nebula);
+      text-align: right;
+    }
+
     .flat-btn {
       width: 100%;
       background: none;
@@ -497,6 +629,7 @@
 <header class="header">
   <div class="app-name">Pomodoro</div>
   <div class="header-btns">
+    <button class="hbtn" id="whatsNewBtnEl" onclick="togglePanel('whatsnew')">What's New</button>
     <button class="hbtn" id="statsBtnEl"    onclick="togglePanel('stats')">Stats</button>
     <button class="hbtn" id="settingsBtnEl" onclick="togglePanel('settings')">Settings</button>
   </div>
@@ -599,6 +732,9 @@
 
       </defs>
 
+      <!-- Black hole shadow — solid fill blocks stars behind the ring interior -->
+      <circle cx="130" cy="130" r="116" style="fill: var(--void)"/>
+
       <!-- Extended outer ghost rings — dimming halo band well beyond the main ring -->
       <circle class="ring-ghost g-o6" cx="130" cy="130" r="148">
         <animate attributeName="cx" values="130;130.4;130;129.6;130"   keyTimes="0;.25;.5;.75;1" dur="9s"  repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1"/>
@@ -674,42 +810,103 @@
           <ellipse class="disk-ring disk-o"  cx="102" cy="130" rx="205" ry="39" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
           <ellipse class="disk-ring disk-m"  cx="102" cy="130" rx="194" ry="33" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
           <ellipse class="disk-ring disk-i"  cx="102" cy="130" rx="182" ry="28" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-          <ellipse class="disk-ring disk-ii" cx="102" cy="130" rx="172" ry="23" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
+          <ellipse class="disk-ring disk-ii"  cx="102" cy="130" rx="172" ry="23" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
+          <ellipse class="disk-ring disk-iii" cx="102" cy="130" rx="162" ry="18" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
+          <ellipse class="disk-ring disk-iv"  cx="102" cy="130" rx="152" ry="14" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
+          <ellipse class="disk-ring disk-v"   cx="102" cy="130" rx="142" ry="10" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
           </g>
 
           <!-- Fan: insertion spread y=68-84 across ring weights so they don't all converge to one pixel -->
           <g transform="rotate(80 102 130)">
+            <animateTransform attributeName="transform" type="rotate"
+              values="79 102 130; 81 102 130; 79 102 130"
+              dur="22s" repeatCount="indefinite" calcMode="spline"
+              keySplines=".45 0 .55 1; .45 0 .55 1" keyTimes="0; .5; 1"/>
             <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M  -8 68 C -18 118  -72 126 -112 130"/>
             <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M  -8 72 C -17 118  -66 125 -103 130"/>
             <path class="disk-ring" stroke-width="1.1"  filter="url(#disk-glow)" d="M  -8 76 C -16 118  -58 125  -92 130"/>
             <path class="disk-ring" stroke-width="1.8"  filter="url(#disk-glow)" d="M  -8 80 C -14 117  -50 123  -80 130"/>
             <path class="disk-ring" stroke-width="1.3"  filter="url(#disk-glow)" d="M  -8 84 C -12 115  -43 121  -70 130"/>
+            <path class="disk-ring" stroke-width="1.0"  filter="url(#disk-glow)" d="M  -8 88 C -10 113  -35 118  -60 130"/>
+            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M  -8 92 C  -9 111  -28 116  -50 130"/>
+            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M  -8 96 C  -8 108  -22 114  -40 130"/>
 
             <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M 222 68 C 232 118  290 126  316 130"/>
             <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M 222 72 C 231 118  280 125  307 130"/>
             <path class="disk-ring" stroke-width="1.1"  filter="url(#disk-glow)" d="M 222 76 C 230 118  270 125  296 130"/>
             <path class="disk-ring" stroke-width="1.8"  filter="url(#disk-glow)" d="M 222 80 C 228 117  260 123  284 130"/>
             <path class="disk-ring" stroke-width="1.3"  filter="url(#disk-glow)" d="M 222 84 C 226 115  254 121  274 130"/>
+            <path class="disk-ring" stroke-width="1.0"  filter="url(#disk-glow)" d="M 222 88 C 224 113  249 118  264 130"/>
+            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M 222 92 C 223 111  242 116  254 130"/>
+            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M 222 96 C 222 108  236 114  244 130"/>
           </g>
         </g>
       </g>
 
       <!-- Upper arc: true circle arcs — radius = distance from local ring-centre (107,102) to each insertion point -->
       <g opacity="0.4" transform="rotate(80 102 130)">
+        <animateTransform attributeName="transform" type="rotate"
+          values="79 102 130; 81 102 130; 79 102 130"
+          dur="22s" repeatCount="indefinite" calcMode="spline"
+          keySplines=".45 0 .55 1; .45 0 .55 1" keyTimes="0; .5; 1"/>
         <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M  -8 68 A 120 120 0 0 1 222 68"/>
         <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M  -8 72 A 119 119 0 0 1 222 72"/>
         <path class="disk-ring" stroke-width="1.1"  filter="url(#disk-glow)" d="M  -8 76 A 118 118 0 0 1 222 76"/>
         <path class="disk-ring" stroke-width="1.8"  filter="url(#disk-glow)" d="M  -8 80 A 117 117 0 0 1 222 80"/>
         <path class="disk-ring" stroke-width="1.3"  filter="url(#disk-glow)" d="M  -8 84 A 116 116 0 0 1 222 84"/>
+        <path class="disk-ring" stroke-width="1.0"  filter="url(#disk-glow)" d="M  -8 88 A 116 116 0 0 1 222 88"/>
+        <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M  -8 92 A 115 115 0 0 1 222 92"/>
+        <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M  -8 96 A 115 115 0 0 1 222 96"/>
       </g>
 
       <!-- Near-side disk arc sits in front and remains visible across the hole. -->
-      <g>
-        <path class="disk-ring disk-oo" d="M -112 130 A 214 41 0 0 0 316 130" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-        <path class="disk-ring disk-o"  d="M -103 130 A 205 39 0 0 0 307 130" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-        <path class="disk-ring disk-m"  d="M -92 130 A 194 33 0 0 0 296 130" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-        <path class="disk-ring disk-i"  d="M -80 130 A 182 28 0 0 0 284 130" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-        <path class="disk-ring disk-ii" d="M -70 130 A 172 23 0 0 0 274 130" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
+      <g transform="rotate(80 102 130)">
+        <animateTransform attributeName="transform" type="rotate"
+          values="79 102 130; 81 102 130; 79 102 130"
+          dur="22s" repeatCount="indefinite" calcMode="spline"
+          keySplines=".45 0 .55 1; .45 0 .55 1" keyTimes="0; .5; 1"/>
+        <path class="disk-ring disk-oo"  d="M -112 130 A 214 41 0 0 0 316 130" filter="url(#disk-glow)"/>
+        <path class="disk-ring disk-o"   d="M -103 130 A 205 39 0 0 0 307 130" filter="url(#disk-glow)"/>
+        <path class="disk-ring disk-m"   d="M  -92 130 A 194 33 0 0 0 296 130" filter="url(#disk-glow)"/>
+        <path class="disk-ring disk-i"   d="M  -80 130 A 182 28 0 0 0 284 130" filter="url(#disk-glow)"/>
+        <path class="disk-ring disk-ii"  d="M  -70 130 A 172 23 0 0 0 274 130" filter="url(#disk-glow)"/>
+        <path class="disk-ring disk-iii" d="M  -60 130 A 162 18 0 0 0 264 130" filter="url(#disk-glow)"/>
+        <path class="disk-ring disk-iv"  d="M  -50 130 A 152 14 0 0 0 254 130" filter="url(#disk-glow)"/>
+        <path class="disk-ring disk-v"   d="M  -40 130 A 142 10 0 0 0 244 130" filter="url(#disk-glow)"/>
+      </g>
+
+      <!-- Keplerian hotspot — core (10px bright) + halo (30-40px dim) per ring.
+           begin stagger = scattered initial positions; halo begin-1s ≈ centres halo around core.
+           right-to-left: from="-pathLen" to="0"; inner rings faster (Keplerian r^3/2). -->
+      <g transform="rotate(80 102 130)">
+        <animateTransform attributeName="transform" type="rotate"
+          values="79 102 130; 81 102 130; 79 102 130"
+          dur="22s" repeatCount="indefinite" calcMode="spline"
+          keySplines=".45 0 .55 1; .45 0 .55 1" keyTimes="0; .5; 1"/>
+        <!-- disk-oo (×0.7) -->
+        <path class="disk-ring" stroke-width="0.9" stroke-dasharray="10 87" opacity="0.077"  filter="url(#disk-glow)" d="M -112 130 A 214 41 0 0 0 316 130"><animate attributeName="stroke-dashoffset" from="-484" to="0" dur="36s" begin="-4s"  repeatCount="indefinite" calcMode="linear"/></path>
+        <path class="disk-ring" stroke-width="0.9" stroke-dasharray="40 57" opacity="0.025"  filter="url(#disk-glow)" d="M -112 130 A 214 41 0 0 0 316 130"><animate attributeName="stroke-dashoffset" from="-484" to="0" dur="36s" begin="-5s"  repeatCount="indefinite" calcMode="linear"/></path>
+        <!-- disk-o (×0.8) -->
+        <path class="disk-ring" stroke-width="1.2" stroke-dasharray="10 83" opacity="0.088"  filter="url(#disk-glow)" d="M -103 130 A 205 39 0 0 0 307 130"><animate attributeName="stroke-dashoffset" from="-464" to="0" dur="34s" begin="-11s" repeatCount="indefinite" calcMode="linear"/></path>
+        <path class="disk-ring" stroke-width="1.2" stroke-dasharray="38 55" opacity="0.028"  filter="url(#disk-glow)" d="M -103 130 A 205 39 0 0 0 307 130"><animate attributeName="stroke-dashoffset" from="-464" to="0" dur="34s" begin="-12s" repeatCount="indefinite" calcMode="linear"/></path>
+        <!-- disk-m (×0.9) -->
+        <path class="disk-ring" stroke-width="1.6" stroke-dasharray="10 77" opacity="0.099"  filter="url(#disk-glow)" d="M  -92 130 A 194 33 0 0 0 296 130"><animate attributeName="stroke-dashoffset" from="-437" to="0" dur="31s" begin="-2s"  repeatCount="indefinite" calcMode="linear"/></path>
+        <path class="disk-ring" stroke-width="1.6" stroke-dasharray="35 52" opacity="0.032"  filter="url(#disk-glow)" d="M  -92 130 A 194 33 0 0 0 296 130"><animate attributeName="stroke-dashoffset" from="-437" to="0" dur="31s" begin="-3s"  repeatCount="indefinite" calcMode="linear"/></path>
+        <!-- disk-i (×1.0) -->
+        <path class="disk-ring" stroke-width="2.5" stroke-dasharray="10 72" opacity="0.11"   filter="url(#disk-glow)" d="M  -80 130 A 182 28 0 0 0 284 130"><animate attributeName="stroke-dashoffset" from="-409" to="0" dur="28s" begin="-15s" repeatCount="indefinite" calcMode="linear"/></path>
+        <path class="disk-ring" stroke-width="2.5" stroke-dasharray="32 50" opacity="0.035"  filter="url(#disk-glow)" d="M  -80 130 A 182 28 0 0 0 284 130"><animate attributeName="stroke-dashoffset" from="-409" to="0" dur="28s" begin="-16s" repeatCount="indefinite" calcMode="linear"/></path>
+        <!-- disk-ii (×1.0) -->
+        <path class="disk-ring" stroke-width="1.8" stroke-dasharray="10 67" opacity="0.11"   filter="url(#disk-glow)" d="M  -70 130 A 172 23 0 0 0 274 130"><animate attributeName="stroke-dashoffset" from="-386" to="0" dur="25s" begin="-7s"  repeatCount="indefinite" calcMode="linear"/></path>
+        <path class="disk-ring" stroke-width="1.8" stroke-dasharray="30 47" opacity="0.035"  filter="url(#disk-glow)" d="M  -70 130 A 172 23 0 0 0 274 130"><animate attributeName="stroke-dashoffset" from="-386" to="0" dur="25s" begin="-8s"  repeatCount="indefinite" calcMode="linear"/></path>
+        <!-- disk-iii (×0.9) -->
+        <path class="disk-ring" stroke-width="1.4" stroke-dasharray="10 62" opacity="0.099"  filter="url(#disk-glow)" d="M  -60 130 A 162 18 0 0 0 264 130"><animate attributeName="stroke-dashoffset" from="-362" to="0" dur="24s" begin="-18s" repeatCount="indefinite" calcMode="linear"/></path>
+        <path class="disk-ring" stroke-width="1.4" stroke-dasharray="28 44" opacity="0.032"  filter="url(#disk-glow)" d="M  -60 130 A 162 18 0 0 0 264 130"><animate attributeName="stroke-dashoffset" from="-362" to="0" dur="24s" begin="-19s" repeatCount="indefinite" calcMode="linear"/></path>
+        <!-- disk-iv (×0.8) -->
+        <path class="disk-ring" stroke-width="1.0" stroke-dasharray="10 58" opacity="0.088"  filter="url(#disk-glow)" d="M  -50 130 A 152 14 0 0 0 254 130"><animate attributeName="stroke-dashoffset" from="-339" to="0" dur="22s" begin="-9s"  repeatCount="indefinite" calcMode="linear"/></path>
+        <path class="disk-ring" stroke-width="1.0" stroke-dasharray="25 43" opacity="0.028"  filter="url(#disk-glow)" d="M  -50 130 A 152 14 0 0 0 254 130"><animate attributeName="stroke-dashoffset" from="-339" to="0" dur="22s" begin="-10s" repeatCount="indefinite" calcMode="linear"/></path>
+        <!-- disk-v (×0.7) -->
+        <path class="disk-ring" stroke-width="0.7" stroke-dasharray="10 53" opacity="0.077"  filter="url(#disk-glow)" d="M  -40 130 A 142 10 0 0 0 244 130"><animate attributeName="stroke-dashoffset" from="-316" to="0" dur="19s" begin="-14s" repeatCount="indefinite" calcMode="linear"/></path>
+        <path class="disk-ring" stroke-width="0.7" stroke-dasharray="22 41" opacity="0.025"  filter="url(#disk-glow)" d="M  -40 130 A 142 10 0 0 0 244 130"><animate attributeName="stroke-dashoffset" from="-316" to="0" dur="19s" begin="-15s" repeatCount="indefinite" calcMode="linear"/></path>
       </g>
     </svg>
     <div class="ring-center">
@@ -721,7 +918,7 @@
   </div>
 
   <div class="controls">
-    <button class="btn btn-icon" title="Reset (R)"    onclick="resetTimer()">↺</button>
+    <button class="btn btn-icon" id="auxBtnEl" title="Reset (R)" onclick="onAuxBtn()">↺</button>
     <button class="btn btn-main" id="mainBtnEl"       onclick="onMainBtn()">Start</button>
     <button class="btn btn-icon" title="Skip (N / →)" onclick="skipPhase()">⏭</button>
   </div>
@@ -735,12 +932,47 @@
     <div class="stat-card"><div class="stat-val" id="sStreak">0</div><div class="stat-lbl">Day Streak</div></div>
     <div class="stat-card"><div class="stat-val" id="sFocus">0m</div><div class="stat-lbl">Focus Today</div></div>
     <div class="stat-card"><div class="stat-val" id="sTotal">0</div><div class="stat-lbl">All Time</div></div>
+    <div class="stat-card"><div class="stat-val" id="sPastTimerToday">0s</div><div class="stat-lbl">Past Timer Today</div></div>
+    <div class="stat-card"><div class="stat-val" id="sPastTimerAvg">0s</div><div class="stat-lbl">Avg Past Timer</div></div>
+    <div class="stat-card"><div class="stat-val" id="sPauseToday">0s</div><div class="stat-lbl">Pause Today</div></div>
+    <div class="stat-card"><div class="stat-val" id="sPauseAvg">0s</div><div class="stat-lbl">Avg Pause</div></div>
   </div>
   <div class="chart-card">
     <div class="chart-title">Last 7 Days</div>
     <div class="chart-bars" id="chartBarsEl"></div>
   </div>
+  <div class="delay-card">
+    <div class="chart-title">Past Timer By Phase</div>
+    <div class="delay-legend">
+      <div class="delay-legend-item"><span class="delay-swatch ontime"></span>On time</div>
+      <div class="delay-legend-item"><span class="delay-swatch delayed"></span>Past timer</div>
+    </div>
+    <div class="delay-breakdown" id="delayBreakdownEl"></div>
+  </div>
+  <div class="delay-card">
+    <div class="chart-title">Pause By Phase</div>
+    <div class="delay-breakdown" id="pauseBreakdownEl"></div>
+  </div>
   <button class="flat-btn" onclick="exportJSON()">↓ Export as JSON</button>
+</div>
+
+<!-- What's New Panel -->
+<div class="panel" id="whatsnewPanel">
+  <div class="whatsnew-card">
+    <div class="chart-title">Curated Updates</div>
+    <div class="wn-version" id="wnVersion">v0.1.0</div>
+
+    <div class="wn-section">
+      <div class="wn-section-title">Highlights</div>
+      <ul class="wn-list" id="wnHighlights"></ul>
+    </div>
+
+    <div class="wn-section">
+      <div class="wn-section-title">Next Up</div>
+      <ul class="wn-list" id="wnNextUp"></ul>
+    </div>
+  </div>
+  <button class="flat-btn" onclick="window.open('WHATS_NEW.md', '_blank')">Open Full What's New</button>
 </div>
 
 <!-- Settings Panel -->
@@ -751,6 +983,7 @@
     <div class="setting-row"><label>Long Break (min)</label>           <input type="number" id="cfgLong"     value="15" min="1"  max="120"></div>
     <div class="setting-row"><label>Sessions before long break</label> <input type="number" id="cfgSessions" value="4"  min="2"  max="8"></div>
     <div class="setting-row"><label>Snooze interval (sec)</label>      <input type="number" id="cfgSnooze"   value="60" min="10" max="300"></div>
+    <div class="setting-row"><label>End idle alarm after (min)</label> <input type="number" id="cfgAutoEnd"  value="0"  min="0"  max="240"></div>
   </div>
   <div class="settings-group">
     <div class="setting-row">
@@ -805,271 +1038,7 @@
 <script src="audio.js"></script>
 <script src="ui.js"></script>
 <script src="app.js"></script>
-
-<script>
-/* ── Star field — disk centered on ring, rotates around ring center ── */
-(function () {
-  const canvas = document.getElementById('stars');
-  const ctx    = canvas.getContext('2d');
-
-  let W, H;
-  const mouse = { x: -9999, y: -9999 };
-  const warp  = { x: -9999, y: -9999 };
-  const EASE  = 0.04;
-
-  const STAR_COUNT    = 600;
-  const ROT_SPEED     = (Math.PI * 2) / 120;   /* very fast inner swirl: ~1 full rotation every 2 min */
-  const WARP_STRENGTH = 2800;
-  const WARP_MAX      = 1.175;
-  const WARP_RADIUS   = 51;
-  const WARP_SOFTEN   = 40;
-  const WARP_DAMP     = 0.915;
-  const TANGENTIAL    = 0.24;
-  const WARP_VMAX     = 1.85;
-
-  const PAL = [
-    [232, 228, 245],
-    [232, 228, 245],
-    [232, 228, 245],
-    [232, 228, 245],
-    [232, 228, 245],
-    [255, 244, 215],
-    [255, 228, 190],
-    [210, 224, 255],
-  ];
-
-  const stars = [];
-
-  let spiralState  = 'wait'; // starts invisible; erupt fires on first Start click
-  let spiralStartT = 0;
-  const COLLAPSE_DUR = 2.5;
-  const ERUPT_DUR    = 1.4;
-
-  /* disk origin = ring center; diskR = distance to farthest viewport corner */
-  let diskCx = 0, diskCy = 0, diskR = 0;
-  let mask   = null;
-
-  function updateGeometry() {
-    const el = document.getElementById('ringWrapEl');
-    if (!el) return false;
-    const rect = el.getBoundingClientRect();
-    if (!rect.width) return false;
-
-    diskCx = rect.left + rect.width  / 2;
-    diskCy = rect.top  + rect.height / 2;
-
-    /* radius must reach every viewport corner from the ring center */
-    diskR = Math.max(
-      Math.hypot(diskCx,         diskCy),
-      Math.hypot(W - diskCx,     diskCy),
-      Math.hypot(diskCx,     H - diskCy),
-      Math.hypot(W - diskCx, H - diskCy),
-    ) * 1.04;
-
-    mask = {
-      cx:     diskCx,
-      cy:     diskCy,
-      radius: 98 * (rect.width / 260),  /* event horizon inside r=103 (min of innermost ghost ring) */
-    };
-    return true;
-  }
-
-  function mkStar() {
-    const bright = Math.random() < 0.07;
-    const c = PAL[Math.floor(Math.random() * PAL.length)];
-    const dist  = diskR * Math.sqrt(Math.random());
-    const theta = Math.random() * Math.PI * 2;
-    const rNorm = dist / diskR;
-    const centerBoost = 1 + Math.pow(1 - rNorm, 2) * 2.6;
-    const baseAngSpeed = (ROT_SPEED * centerBoost) / (1 + rNorm * 4.8 + rNorm * rNorm * 22);
-    const angSpeed = baseAngSpeed * (0.93 + Math.random() * 0.14);
-    return {
-      dist, theta, angSpeed,
-      sz:    bright ? Math.random() * 1.5 + 1.8 : Math.pow(Math.random(), 1.6) * 1.9 + 0.3,
-      base:  bright ? Math.random() * 0.12 + 0.78 : Math.random() * 0.52 + 0.18,
-      phase: Math.random() * Math.PI * 2,
-      speed: bright ? Math.random() * 0.35 + 0.08 : Math.random() * 1.6 + 0.5,
-      rgb: `rgb(${c[0]},${c[1]},${c[2]})`,
-      vx: 0, vy: 0,
-      swirlDir: Math.random() < 0.5 ? -1 : 1,
-    };
-  }
-
-  function populate() {
-    stars.length = 0;
-    for (let i = 0; i < STAR_COUNT; i++) stars.push(mkStar());
-  }
-
-  function resize() {
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    /* fall back to screen center if ring not yet laid out */
-    if (!updateGeometry()) {
-      diskCx = W / 2;
-      diskCy = H / 2;
-      diskR  = Math.hypot(W, H) / 2;
-    }
-    populate();
-    warp.x = mouse.x;
-    warp.y = mouse.y;
-  }
-
-  function draw(ts) {
-    const t = ts * 0.001;
-
-    warp.x += (mouse.x - warp.x) * EASE;
-    warp.y += (mouse.y - warp.y) * EASE;
-
-    ctx.clearRect(0, 0, W, H);
-
-    /* spiral progress */
-    let colP = 0, eruptP = 0;
-    if (spiralState === 'collapsing') {
-      colP = Math.min((t - spiralStartT) / COLLAPSE_DUR, 1);
-      if (colP >= 1) spiralState = 'wait';
-    } else if (spiralState === 'erupting') {
-      eruptP = Math.min((t - spiralStartT) / ERUPT_DUR, 1);
-      if (eruptP >= 1) spiralState = 'idle';
-    }
-
-    for (const s of stars) {
-      /* orbital position — spin faster as stars collapse */
-      const spinMult = spiralState === 'collapsing' ? 1 + colP * 12 : 1;
-      const a  = s.theta + t * s.angSpeed * spinMult;
-      let px = diskCx + s.dist * Math.cos(a);
-      let py = diskCy + s.dist * Math.sin(a);
-      const orbX = px;
-      const orbY = py;
-
-      /* cursor gravity with tangential component for slingshot-like arcs */
-      if (spiralState === 'idle') {
-        const gdx = px - warp.x;
-        const gdy = py - warp.y;
-        const gd  = Math.sqrt(gdx * gdx + gdy * gdy);
-
-        if (gd < WARP_RADIUS && gd > 0.5) {
-          const edgeFade = Math.pow(1 - gd / WARP_RADIUS, 1.5);
-          const pull = Math.min(WARP_STRENGTH / (gd * gd + WARP_SOFTEN), WARP_MAX) * edgeFade;
-          const ux = gdx / gd;
-          const uy = gdy / gd;
-          const tx = -uy * s.swirlDir;
-          const ty =  ux * s.swirlDir;
-
-          s.vx -= ux * pull;
-          s.vy -= uy * pull;
-          s.vx += tx * pull * TANGENTIAL * (0.45 + edgeFade * 0.55);
-          s.vy += ty * pull * TANGENTIAL * (0.45 + edgeFade * 0.55);
-        }
-
-        s.vx *= WARP_DAMP;
-        s.vy *= WARP_DAMP;
-
-        const vMag = Math.hypot(s.vx, s.vy);
-        if (vMag > WARP_VMAX) {
-          const k = WARP_VMAX / vMag;
-          s.vx *= k;
-          s.vy *= k;
-        }
-
-        const nx = px + s.vx;
-        const ny = py + s.vy;
-        const ndx = nx - diskCx;
-        const ndy = ny - diskCy;
-        const nd  = Math.sqrt(ndx * ndx + ndy * ndy);
-
-        if (nd > 4 && nd < diskR * 1.08) {
-          s.dist  = nd;
-          s.theta = Math.atan2(ndy, ndx) - t * s.angSpeed;
-          px = nx;
-          py = ny;
-        }
-      } else {
-        s.vx *= 0.75;
-        s.vy *= 0.75;
-      }
-
-      let alphaScale = 1;
-
-      if (spiralState === 'collapsing') {
-        const ease = Math.pow(colP, 0.65);
-        px = px + (mask.cx - px) * ease;
-        py = py + (mask.cy - py) * ease;
-        alphaScale = 1 - Math.pow(ease, 1.2);
-      } else if (spiralState === 'wait') {
-        alphaScale = 0;
-      } else if (spiralState === 'erupting') {
-        const ease = 1 - Math.pow(1 - eruptP, 2.5);
-        px = mask.cx + (orbX - mask.cx) * ease;
-        py = mask.cy + (orbY - mask.cy) * ease;
-        alphaScale = Math.pow(eruptP, 0.5);
-      }
-
-      const twinkle = Math.sin(t * s.speed + s.phase) * 0.28 + 0.72;
-      const alpha   = s.base * twinkle * alphaScale;
-      if (alpha < 0.005) continue;
-
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle   = s.rgb;   /* pre-computed — zero string allocs per frame */
-      ctx.beginPath();
-      ctx.arc(px, py, s.sz, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.globalAlpha = 1;
-
-    /* eruption flash — bloom burst from event horizon on bang */
-    if (spiralState === 'erupting' && eruptP < 0.3 && mask) {
-      const flashA = Math.pow(1 - eruptP / 0.3, 2) * 0.9;
-      const r = mask.radius * 5;
-      const g = ctx.createRadialGradient(mask.cx, mask.cy, 0, mask.cx, mask.cy, r);
-      g.addColorStop(0,    `rgba(255,230,150,${flashA.toFixed(3)})`);
-      g.addColorStop(0.25, `rgba(245,170,80,${(flashA * 0.55).toFixed(3)})`);
-      g.addColorStop(1,    'rgba(200,100,40,0)');
-      ctx.beginPath();
-      ctx.arc(mask.cx, mask.cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = g;
-      ctx.fill();
-    }
-
-    /* event horizon void — pitch-black, matched to --void */
-    if (mask) {
-      ctx.beginPath();
-      ctx.arc(mask.cx, mask.cy, mask.radius, 0, Math.PI * 2);
-      ctx.fillStyle = '#060C12';
-      ctx.fill();
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  window.starCollapse = function() {
-    if (spiralState !== 'idle') return;
-    spiralState  = 'collapsing';
-    spiralStartT = performance.now() * 0.001;
-    for (const s of stars) { s.vx = 0; s.vy = 0; }
-  };
-  window.starErupt = function() {
-    if (spiralState !== 'wait') return;  /* only erupt from collapsed/initial state */
-    spiralState  = 'erupting';
-    spiralStartT = performance.now() * 0.001;
-  };
-
-  window.addEventListener('resize', () => { resize(); });
-  window.addEventListener('scroll', () => { if (updateGeometry()) populate(); }, { passive: true });
-  window.addEventListener('mousemove',  e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-  window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
-  window.addEventListener('touchmove',  e => {
-    if (e.touches.length) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
-  }, { passive: true });
-  window.addEventListener('touchend', () => { mouse.x = -9999; mouse.y = -9999; });
-
-  /* re-center on ring after full layout + fonts load */
-  window.addEventListener('load', () => { if (updateGeometry()) populate(); });
-
-  resize();
-  requestAnimationFrame(draw);
-})();
-</script>
+<script src="stars.js"></script>
 
 </body>
 </html>

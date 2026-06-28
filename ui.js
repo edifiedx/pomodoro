@@ -36,6 +36,7 @@ function refreshUI() {
   document.getElementById('mainEl').classList.toggle('running', S.running);
 
   const btn = document.getElementById('mainBtnEl');
+  const auxBtn = document.getElementById('auxBtnEl');
   if (S.alarmPending) {
     btn.textContent = '→ Next';
     btn.classList.add('alarm');
@@ -44,6 +45,16 @@ function refreshUI() {
     btn.textContent = S.running ? 'Pause'
       : S.remainingSec < S.totalSec ? 'Resume'
       : 'Start';
+  }
+
+  if (auxBtn) {
+    if (S.running || S.alarmPending || S.remainingSec < S.totalSec) {
+      auxBtn.textContent = '■';
+      auxBtn.title = S.alarmPending ? 'End session' : 'Stop session';
+    } else {
+      auxBtn.textContent = '↺';
+      auxBtn.title = 'Reset (R)';
+    }
   }
 
   renderDots();
@@ -240,19 +251,112 @@ function fireNotification(title, body) {
 /* ── Panels ── */
 
 let activePanel = null;
+let whatsNewCache = null;
+
+function pushListItem(listEl, text) {
+  if (!listEl) return;
+  const li = document.createElement('li');
+  li.className = 'wn-item';
+  li.textContent = text;
+  listEl.appendChild(li);
+}
+
+function renderWhatsNew(data) {
+  const versionEl = document.getElementById('wnVersion');
+  const highlightsEl = document.getElementById('wnHighlights');
+  const nextUpEl = document.getElementById('wnNextUp');
+  if (!versionEl || !highlightsEl || !nextUpEl) return;
+
+  versionEl.textContent = `v${data.version || '0.1.0'}`;
+  highlightsEl.innerHTML = '';
+  nextUpEl.innerHTML = '';
+
+  if (!data.highlights.length) {
+    const msg = document.createElement('div');
+    msg.className = 'wn-empty';
+    msg.textContent = 'No highlights yet.';
+    highlightsEl.appendChild(msg);
+  } else {
+    data.highlights.forEach(item => pushListItem(highlightsEl, item));
+  }
+
+  if (!data.nextUp.length) {
+    const msg = document.createElement('div');
+    msg.className = 'wn-empty';
+    msg.textContent = 'No upcoming items listed.';
+    nextUpEl.appendChild(msg);
+  } else {
+    data.nextUp.forEach(item => pushListItem(nextUpEl, item));
+  }
+}
+
+function parseWhatsNewMarkdown(md) {
+  const lines = md.split(/\r?\n/);
+  const parsed = { version: '0.1.0', highlights: [], nextUp: [] };
+  let section = '';
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('## ')) {
+      const head = line.slice(3).toLowerCase();
+      if (head === 'current version') section = 'version';
+      else if (head === 'highlights') section = 'highlights';
+      else if (head === 'next up') section = 'nextUp';
+      else section = '';
+      continue;
+    }
+    if (section === 'version' && !line.startsWith('-')) {
+      parsed.version = line.replace(/^v/i, '');
+      continue;
+    }
+    if (line.startsWith('- ')) {
+      const item = line.slice(2).trim();
+      if (!item) continue;
+      if (section === 'highlights') parsed.highlights.push(item);
+      if (section === 'nextUp') parsed.nextUp.push(item);
+    }
+  }
+
+  return parsed;
+}
+
+async function loadWhatsNew() {
+  if (whatsNewCache) {
+    renderWhatsNew(whatsNewCache);
+    return;
+  }
+  try {
+    const res = await fetch('WHATS_NEW.md', { cache: 'no-store' });
+    if (!res.ok) throw new Error('fetch failed');
+    const md = await res.text();
+    whatsNewCache = parseWhatsNewMarkdown(md);
+  } catch (e) {
+    whatsNewCache = {
+      version: '0.1.0',
+      highlights: ['Could not load WHATS_NEW.md in this environment.'],
+      nextUp: ['Open the WHATS_NEW.md file directly for details.'],
+    };
+  }
+  renderWhatsNew(whatsNewCache);
+}
 
 function togglePanel(name) {
   const same = activePanel === name;
-  ['stats', 'settings'].forEach(n => document.getElementById(n + 'Panel').classList.remove('open'));
+  ['stats', 'settings', 'whatsnew'].forEach(n => document.getElementById(n + 'Panel').classList.remove('open'));
+  document.getElementById('whatsNewBtnEl').classList.remove('on');
   document.getElementById('statsBtnEl').classList.remove('on');
   document.getElementById('settingsBtnEl').classList.remove('on');
   activePanel = null;
   if (same || !name) return;
   activePanel = name;
   document.getElementById(name + 'Panel').classList.add('open');
-  document.getElementById(name === 'stats' ? 'statsBtnEl' : 'settingsBtnEl').classList.add('on');
+  if (name === 'stats') document.getElementById('statsBtnEl').classList.add('on');
+  if (name === 'settings') document.getElementById('settingsBtnEl').classList.add('on');
+  if (name === 'whatsnew') document.getElementById('whatsNewBtnEl').classList.add('on');
   if (name === 'stats')    loadStats();
   if (name === 'settings') updateNotifStatus();
+  if (name === 'whatsnew') loadWhatsNew();
 }
 
 /* ── Toast ── */
@@ -268,15 +372,139 @@ function showToast(msg, ms = 2500) {
   toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }
 
+function formatDelay(secs) {
+  if (!secs) return '0s';
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  const rem  = secs % 60;
+  if (!rem) return `${mins}m`;
+  return `${mins}m ${rem}s`;
+}
+
+function formatPhaseLabel(type) {
+  return type === 'work' ? 'Work'
+    : type === 'short-break' ? 'Short'
+    : 'Long';
+}
+
+function renderDelayBreakdown(sessions) {
+  const el = document.getElementById('delayBreakdownEl');
+  if (!el) return;
+  el.innerHTML = '';
+
+  const rows = ['work', 'short-break', 'long-break'];
+
+  rows.forEach(key => {
+    const label = formatPhaseLabel(key);
+    const phaseSessions = sessions.filter(s => s.type === key);
+    const total = phaseSessions.length;
+    const pastTimer = phaseSessions.filter(s => (s.snoozedFor || 0) > 0).length;
+    const onTime = Math.max(0, total - pastTimer);
+    const pastTimerPct = total ? (pastTimer / total) * 100 : 0;
+    const onTimePct = total ? (onTime / total) * 100 : 0;
+
+    const row = document.createElement('div');
+    row.className = 'delay-row';
+
+    const phase = document.createElement('div');
+    phase.className = 'delay-phase';
+    phase.textContent = label;
+
+    const track = document.createElement('div');
+    track.className = 'delay-track';
+    track.title = total
+      ? `${label}: ${pastTimer} past timer / ${total} total`
+      : `${label}: no completed sessions yet`;
+
+    const onTimeFill = document.createElement('div');
+    onTimeFill.className = 'delay-fill-ontime';
+    onTimeFill.style.width = `${onTimePct}%`;
+
+    const delayedFill = document.createElement('div');
+    delayedFill.className = 'delay-fill-delayed';
+    delayedFill.style.width = `${pastTimerPct}%`;
+
+    track.appendChild(onTimeFill);
+    track.appendChild(delayedFill);
+
+    const meta = document.createElement('div');
+    meta.className = 'delay-meta';
+    meta.textContent = total ? `${pastTimer}/${total}` : '0/0';
+
+    row.appendChild(phase);
+    row.appendChild(track);
+    row.appendChild(meta);
+    el.appendChild(row);
+  });
+}
+
+function renderPauseBreakdown(sessions) {
+  const el = document.getElementById('pauseBreakdownEl');
+  if (!el) return;
+  el.innerHTML = '';
+
+  const rows = ['work', 'short-break', 'long-break'];
+  const totals = rows.map(key =>
+    sessions
+      .filter(s => s.type === key)
+      .reduce((sum, s) => sum + (s.pausedDuration || 0), 0)
+  );
+  const maxTotal = Math.max(1, ...totals);
+
+  rows.forEach((key, index) => {
+    const label = formatPhaseLabel(key);
+    const pausedSec = totals[index];
+    const widthPct = (pausedSec / maxTotal) * 100;
+
+    const row = document.createElement('div');
+    row.className = 'delay-row';
+
+    const phase = document.createElement('div');
+    phase.className = 'delay-phase';
+    phase.textContent = label;
+
+    const track = document.createElement('div');
+    track.className = 'delay-track';
+    track.title = `${label}: ${formatDelay(pausedSec)} paused`;
+
+    const fill = document.createElement('div');
+    fill.className = 'pause-fill';
+    fill.style.width = `${widthPct}%`;
+    track.appendChild(fill);
+
+    const meta = document.createElement('div');
+    meta.className = 'delay-meta';
+    meta.textContent = formatDelay(pausedSec);
+
+    row.appendChild(phase);
+    row.appendChild(track);
+    row.appendChild(meta);
+    el.appendChild(row);
+  });
+}
+
 /* ── Stats ── */
 
 async function loadStats() {
   const sessions  = await dbGetAll();
   const workDone  = sessions.filter(s => s.type === 'work' && s.completed);
+  const completed = sessions.filter(s => s.completed);
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const ts         = todayStart.getTime();
   const todaySess  = workDone.filter(s => s.startTime >= ts);
   const focusSec   = todaySess.reduce((a, s) => a + s.plannedDuration, 0);
+  const todayCompleted = completed.filter(s => s.startTime >= ts);
+  const pastTimerTodaySec = todayCompleted.reduce((a, s) => a + (s.snoozedFor || 0), 0);
+  const pastTimerSessions = completed.filter(s => (s.snoozedFor || 0) > 0);
+  const avgPastTimerSec   = pastTimerSessions.length
+    ? Math.round(pastTimerSessions.reduce((a, s) => a + s.snoozedFor, 0) / pastTimerSessions.length)
+    : 0;
+  const todaySessions = sessions.filter(s => s.startTime >= ts);
+  const pauseTodaySec = todaySessions.reduce((a, s) => a + (s.pausedDuration || 0), 0);
+  const pausedSessions = sessions.filter(s => (s.pausedDuration || 0) > 0);
+  const avgPauseSec    = pausedSessions.length
+    ? Math.round(pausedSessions.reduce((a, s) => a + s.pausedDuration, 0) / pausedSessions.length)
+    : 0;
 
   document.getElementById('sToday').textContent  = todaySess.length;
   document.getElementById('sTotal').textContent  = workDone.length;
@@ -284,8 +512,14 @@ async function loadStats() {
     ? `${(focusSec / 3600).toFixed(1)}h`
     : `${Math.floor(focusSec / 60)}m`;
   document.getElementById('sStreak').textContent = calcStreak(workDone);
+  document.getElementById('sPastTimerToday').textContent = formatDelay(pastTimerTodaySec);
+  document.getElementById('sPastTimerAvg').textContent   = formatDelay(avgPastTimerSec);
+  document.getElementById('sPauseToday').textContent     = formatDelay(pauseTodaySec);
+  document.getElementById('sPauseAvg').textContent       = formatDelay(avgPauseSec);
 
   renderChart(workDone);
+  renderDelayBreakdown(completed);
+  renderPauseBreakdown(sessions);
 }
 
 function calcStreak(sessions) {
