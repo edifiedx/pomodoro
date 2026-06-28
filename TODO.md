@@ -14,6 +14,8 @@
 
 - **Device/window adaptive visuals (low priority)**: Add viewport/device-aware animation tiers. Keep full visuals for desktop skinny-window use, but reduce expensive SVG/filter animation on mobile/small screens to avoid flicker.
 
+- **Disable drag text selection artifacts**: Prevent accidental text selection while click-dragging around the UI (especially when playing with stars), so blue highlight artifacts do not appear. Keep this compatible with future click-based star mechanics.
+
 ---
 
 ## Session Recovery / Flow
@@ -36,7 +38,10 @@
 
 - **Changelog visibility**: Use two files: full history in `CHANGELOG.md` + curated rolling feed in `WHATS_NEW.md` for the in-app “What’s New” view.
 - **What's New enhancements**: Add per-highlight date stamps and a "since last visit" badge on the header button so users know when new items have appeared since they last opened the panel.
+- **Notification permission explainer**: Add UX copy/step before requesting browser notification permission so users understand why permission is needed instead of being prompted immediately.
 - **Rethink current pause/past-timer visuals**: Current `Pause By Phase` and `Past Timer` implementation is temporary. Redesign after recovery/session-boundary decisions are finalized.
+
+- **CSV export**: Add CSV export option in addition to JSON export for easier spreadsheet analysis.
 
 ---
 
@@ -61,6 +66,12 @@
 ## Notes / Status
 
 - **Semantic versioning**: Start project versioning at `0.1.0` and maintain future updates via semver.
+
+- **Done**: Removed hidden legacy ellipse disk markup from `index.html`.
+
+- **Done**: Added audio node cleanup in `audio.js` (`osc.disconnect()` / `gain.disconnect()` on ended).
+
+- **Done**: Added notification lifecycle cleanup in `ui.js` (close prior notification, close on visibility return/unload).
 
 - **Notification policy**: Keep `silent: true`; no background/browser-close alarm sound behavior.
 

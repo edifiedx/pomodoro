@@ -237,16 +237,36 @@ function updateNotifStatus() {
   }
 }
 
+let lastNotification = null;
+
+function closeLastNotification() {
+  if (!lastNotification) return;
+  try { lastNotification.close(); } catch (e) {}
+  lastNotification = null;
+}
+
 function fireNotification(title, body) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  closeLastNotification();
   const n = new Notification(title, { body, silent: true });
+  lastNotification = n;
   n.onclick = () => {
     window.focus();
     if (S.alarmPending) { dismissAlarm(); advancePhase(); refreshUI(); }
+    if (lastNotification === n) lastNotification = null;
     n.close();
   };
-  setTimeout(() => n.close(), 30000);
+  setTimeout(() => {
+    if (lastNotification === n) lastNotification = null;
+    n.close();
+  }, 30000);
 }
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) closeLastNotification();
+});
+
+window.addEventListener('beforeunload', closeLastNotification);
 
 /* ── Panels ── */
 

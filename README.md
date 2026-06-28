@@ -6,6 +6,20 @@ A focused, no-nonsense Pomodoro timer with a black-hole aesthetic.
 
 ---
 
+## Why this exists
+
+This project is built around an ADHD-first workflow.
+
+Typical pomodoro tools often assume strong task-list coupling (pick task, run timer, check off task, repeat). That model does not always fit how focus actually works for me, so this timer is designed to support attention and re-entry first, with task metadata optional.
+
+The visuals are intentional, not decorative:
+
+- They make the tool rewarding to keep open while working.
+- They increase return-to-tool behavior between focus blocks.
+- They provide a small, positive incentive loop so the timer feels like part of the workflow instead of friction.
+
+---
+
 ## Features
 
 - **Work / short break / long break** phases with configurable durations

@@ -17,6 +17,10 @@ function beep(freq, dur, vol, delay) {
     const t = ctx.currentTime + (delay || 0);
     gain.gain.setValueAtTime(vol, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.onended = () => {
+      try { osc.disconnect(); } catch (e) {}
+      try { gain.disconnect(); } catch (e) {}
+    };
     osc.start(t);
     osc.stop(t + dur + 0.02);
   } catch(e) {}

@@ -8,6 +8,14 @@
   const warp  = { x: -9999, y: -9999 };
   const EASE  = 0.04;
 
+  function clearPointerInfluence() {
+    mouse.x = -9999;
+    mouse.y = -9999;
+    /* Snap warp too so attraction stops immediately when window loses focus. */
+    warp.x = mouse.x;
+    warp.y = mouse.y;
+  }
+
   const STAR_COUNT    = 600;
   const ROT_SPEED     = (Math.PI * 2) / 120;   /* very fast inner swirl: ~1 full rotation every 2 min */
   const WARP_STRENGTH = 2800;
@@ -247,11 +255,17 @@
   window.addEventListener('resize', () => { resize(); });
   window.addEventListener('scroll', () => { if (updateGeometry()) populate(); }, { passive: true });
   window.addEventListener('mousemove',  e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-  window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+  window.addEventListener('mouseleave', clearPointerInfluence);
+  window.addEventListener('blur', clearPointerInfluence);
+  window.addEventListener('pagehide', clearPointerInfluence);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearPointerInfluence();
+  });
   window.addEventListener('touchmove',  e => {
     if (e.touches.length) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
   }, { passive: true });
-  window.addEventListener('touchend', () => { mouse.x = -9999; mouse.y = -9999; });
+  window.addEventListener('touchend', clearPointerInfluence);
+  window.addEventListener('touchcancel', clearPointerInfluence);
 
   /* re-center on ring after full layout + fonts load */
   window.addEventListener('load', () => { if (updateGeometry()) populate(); });

@@ -805,17 +805,6 @@
       <!-- Background disk layer visible only outside the ring boundary. -->
       <g mask="url(#disk-outside-mask)">
         <g opacity="0.28">
-          <g display="none"><!-- temp hidden to preview fan alone -->
-          <ellipse class="disk-ring disk-oo" cx="102" cy="130" rx="214" ry="41" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-          <ellipse class="disk-ring disk-o"  cx="102" cy="130" rx="205" ry="39" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-          <ellipse class="disk-ring disk-m"  cx="102" cy="130" rx="194" ry="33" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-          <ellipse class="disk-ring disk-i"  cx="102" cy="130" rx="182" ry="28" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-          <ellipse class="disk-ring disk-ii"  cx="102" cy="130" rx="172" ry="23" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-          <ellipse class="disk-ring disk-iii" cx="102" cy="130" rx="162" ry="18" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-          <ellipse class="disk-ring disk-iv"  cx="102" cy="130" rx="152" ry="14" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-          <ellipse class="disk-ring disk-v"   cx="102" cy="130" rx="142" ry="10" transform="rotate(80 102 130)" filter="url(#disk-glow)"/>
-          </g>
-
           <!-- Fan: insertion spread y=68-84 across ring weights so they don't all converge to one pixel -->
           <g transform="rotate(80 102 130)">
             <animateTransform attributeName="transform" type="rotate"
