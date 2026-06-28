@@ -3,7 +3,122 @@
 let tickId  = null;
 let alarmId = null;
 let alarmAutoEndId = null;
+let overflowId = null;
 let _firstStart = true;
+const RUNTIME_KEY = 'pomo-runtime-v1';
+
+function clearOverflowTimer() {
+  clearInterval(overflowId);
+  overflowId = null;
+}
+
+function armOverflowTimer() {
+  clearOverflowTimer();
+  if (!S.alarmPending) return;
+  overflowId = setInterval(() => {
+    if (!S.alarmPending) {
+      clearOverflowTimer();
+      return;
+    }
+    refreshUI();
+  }, 1000);
+}
+
+function persistRuntimeState() {
+  try {
+    localStorage.setItem(RUNTIME_KEY, JSON.stringify({
+      phase:         S.phase,
+      cycleWorkDone: S.cycleWorkDone,
+      totalWorkEver: S.totalWorkEver,
+      running:       S.running,
+      alarmPending:  S.alarmPending,
+      phaseEndTime:  S.phaseEndTime,
+      remainingSec:  S.remainingSec,
+      totalSec:      S.totalSec,
+      phaseStartTime:S.phaseStartTime,
+      alarmStartTime:S.alarmStartTime,
+      nextAlarmAt:   S.nextAlarmAt,
+      pauseStartedAt:S.pauseStartedAt,
+      pausedMs:      S.pausedMs,
+      currentLabel:  S.currentLabel,
+      savedAt:       Date.now(),
+    }));
+  } catch (e) {}
+}
+
+async function restoreRuntimeState() {
+  try {
+    const raw = localStorage.getItem(RUNTIME_KEY);
+    if (!raw) return false;
+    const snap = JSON.parse(raw);
+    if (!snap || !snap.phase) return false;
+
+    if (LABELS[snap.phase]) S.phase = snap.phase;
+    if (Number.isFinite(snap.cycleWorkDone)) S.cycleWorkDone = snap.cycleWorkDone;
+    if (Number.isFinite(snap.totalWorkEver)) S.totalWorkEver = snap.totalWorkEver;
+    if (typeof snap.currentLabel === 'string' && snap.currentLabel.trim()) {
+      S.currentLabel = snap.currentLabel;
+    }
+
+    const phaseSec = {
+      'work': CFG.workMins,
+      'short-break': CFG.shortBreakMins,
+      'long-break': CFG.longBreakMins,
+    }[S.phase] * 60;
+
+    S.totalSec = Number.isFinite(snap.totalSec) ? snap.totalSec : phaseSec;
+    S.phaseStartTime = Number.isFinite(snap.phaseStartTime) ? snap.phaseStartTime : null;
+    S.pauseStartedAt = Number.isFinite(snap.pauseStartedAt) ? snap.pauseStartedAt : null;
+    S.pausedMs = Number.isFinite(snap.pausedMs) ? snap.pausedMs : 0;
+    S.alarmStartTime = Number.isFinite(snap.alarmStartTime) ? snap.alarmStartTime : null;
+    S.nextAlarmAt = Number.isFinite(snap.nextAlarmAt) ? snap.nextAlarmAt : null;
+
+    if (snap.alarmPending) {
+      S.running = false;
+      S.alarmPending = true;
+      S.phaseEndTime = null;
+      S.remainingSec = 0;
+      if (!S.alarmStartTime) S.alarmStartTime = Date.now();
+      refreshUI();
+      playAlarm();
+      const msToNext = S.nextAlarmAt ? Math.max(0, S.nextAlarmAt - Date.now()) : null;
+      armAlarm(msToNext);
+      armAlarmAutoEnd();
+      armOverflowTimer();
+      showToast('Restored pending alarm');
+      return true;
+    }
+
+    if (snap.running && Number.isFinite(snap.phaseEndTime)) {
+      const secLeft = Math.max(0, Math.ceil((snap.phaseEndTime - Date.now()) / 1000));
+      S.alarmPending = false;
+      S.running = secLeft > 0;
+      S.phaseEndTime = secLeft > 0 ? snap.phaseEndTime : null;
+      S.remainingSec = secLeft;
+      if (secLeft <= 0) {
+        refreshUI();
+        await phaseComplete();
+      } else {
+        refreshUI();
+        scheduleTick();
+        showToast('Timer restored');
+      }
+      return true;
+    }
+
+    S.running = false;
+    S.alarmPending = false;
+    S.phaseEndTime = null;
+    S.remainingSec = Number.isFinite(snap.remainingSec)
+      ? Math.max(0, Math.min(snap.remainingSec, S.totalSec))
+      : S.totalSec;
+    refreshUI();
+    if (S.remainingSec < S.totalSec) showToast('Paused timer restored');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 function settlePausedTime() {
   if (!S.pauseStartedAt) return;
@@ -13,9 +128,8 @@ function settlePausedTime() {
 
 function startTimer() {
   if (S.running || S.alarmPending) return;
-  if (!S._notifRequested && 'Notification' in window && Notification.permission === 'default') {
-    S._notifRequested = true;
-    Notification.requestPermission().then(updateNotifStatus);
+  if (typeof shouldShowNotifModal === 'function' && shouldShowNotifModal()) {
+    showNotifModal();
   }
   settlePausedTime();
   if (!S.phaseStartTime) S.phaseStartTime = Date.now();
@@ -159,21 +273,40 @@ async function phaseComplete() {
     playAlarm();
     armAlarm();
     armAlarmAutoEnd();
+    armOverflowTimer();
   }
 }
 
-function armAlarm() {
+function armAlarm(firstTickDelay) {
   clearInterval(alarmId);
   const interval = S.alarmStyle === 'snooze' ? CFG.snoozeIntervalSec * 1000 : 2800;
-  alarmId = setInterval(() => {
-    if (S.alarmPending) playAlarm();
-    else { clearInterval(alarmId); alarmId = null; }
-  }, interval);
+  const startInterval = () => {
+    S.nextAlarmAt = Date.now() + interval;
+    alarmId = setInterval(() => {
+      if (S.alarmPending) {
+        playAlarm();
+        S.nextAlarmAt = Date.now() + interval;
+      } else { clearInterval(alarmId); alarmId = null; }
+    }, interval);
+  };
+  if (firstTickDelay != null && firstTickDelay < interval) {
+    // Sync first chime to the saved schedule, then go regular
+    S.nextAlarmAt = Date.now() + firstTickDelay;
+    alarmId = setTimeout(() => {
+      if (!S.alarmPending) { alarmId = null; return; }
+      playAlarm();
+      startInterval();
+    }, firstTickDelay);
+  } else {
+    startInterval();
+  }
 }
 
 function dismissAlarm() {
   if (!S.alarmPending) return;
   S.alarmPending = false;
+  S.nextAlarmAt = null;
+  clearOverflowTimer();
   clearInterval(alarmId);
   alarmId = null;
   clearAlarmAutoEnd();
@@ -203,6 +336,8 @@ function setPhase(phase) {
   S.pauseStartedAt = null;
   S.pausedMs       = 0;
   S.alarmStartTime = null;
+  S.nextAlarmAt    = null;
+  clearOverflowTimer();
   clearAlarmAutoEnd();
   S.totalSec       = { 'work': CFG.workMins, 'short-break': CFG.shortBreakMins, 'long-break': CFG.longBreakMins }[phase] * 60;
   S.remainingSec   = S.totalSec;
@@ -410,15 +545,24 @@ document.addEventListener('visibilitychange', () => {
   if (S.alarmPending) playAlarm();
 });
 
+window.addEventListener('beforeunload', persistRuntimeState);
+
 /* ── Init ── */
 
 async function init() {
   db = await openDB().catch(() => null);
   loadPrefs();
+
+  const restored = await restoreRuntimeState();
+  if (!restored) {
+    setPhase('work');
+  }
+
   const labelEl = document.getElementById('sessionLabelEl');
-  labelEl.value = DEFAULT_LABEL;
-  S.currentLabel = DEFAULT_LABEL;
-  setPhase('work');
+  if (!S.currentLabel) S.currentLabel = DEFAULT_LABEL;
+  labelEl.value = S.currentLabel;
+  labelEl.classList.toggle('is-default', S.currentLabel === DEFAULT_LABEL);
+
   updateNotifStatus();
 }
 

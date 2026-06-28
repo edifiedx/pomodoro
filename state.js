@@ -37,10 +37,10 @@ const S = {
   totalSec:        25 * 60,
   phaseStartTime:  null,
   alarmStartTime:  null,
+  nextAlarmAt:     null,
   pauseStartedAt:  null,
   pausedMs:        0,
   currentLabel:    DEFAULT_LABEL,
   advanceMode:     'manual',
   alarmStyle:      'snooze',
-  _notifRequested: false,
 };

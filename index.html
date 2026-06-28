@@ -27,7 +27,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      user-select: none;
     }
+
+    input, textarea { user-select: text; }
 
     #stars {
       position: fixed;
@@ -279,7 +282,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 2px;
     }
 
     .time-display {
@@ -322,6 +325,10 @@
       text-transform: uppercase;
       color: var(--nebula);
       transition: color 0.3s;
+      background: rgba(6, 12, 18, 0.55);
+      border-radius: 2px;
+      padding: 1px 3px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.7);
     }
 
     .alarm-active .time-display { animation: apulse 1.1s ease-in-out infinite; }
@@ -595,8 +602,88 @@
       transition: color 0.15s, border-color 0.15s;
     }
     .notif-status:hover   { color: var(--star); border-color: var(--nebula); }
+    .notif-status:disabled { cursor: default; opacity: 0.6; }
+    .notif-status:disabled:hover { color: var(--nebula); border-color: var(--rim); }
     .notif-status.granted { color: #4AA870; border-color: #4AA870; }
     .notif-status.denied  { color: #C84848; border-color: #C84848; }
+    .notif-help {
+      margin-top: 8px;
+      color: var(--nebula);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 11px;
+      line-height: 1.4;
+      opacity: 0.9;
+    }
+
+    /* Notification onboarding modal */
+    .notif-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 12, 18, 0.82);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .notif-modal-backdrop.open { display: flex; }
+    .notif-modal {
+      background: var(--surface);
+      border: 1px solid var(--rim);
+      border-radius: 4px;
+      padding: 32px 28px 24px;
+      max-width: 320px;
+      width: calc(100% - 48px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .notif-modal-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 4px;
+      color: var(--star);
+    }
+    .notif-modal-body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 12px;
+      color: var(--nebula);
+      line-height: 1.6;
+    }
+    .notif-modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+    .notif-modal-actions .btn-skip {
+      background: none;
+      border: none;
+      color: var(--nebula);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 10px 8px;
+      transition: color 0.15s;
+    }
+    .notif-modal-actions .btn-skip:hover { color: var(--star); }
+    .notif-modal-actions .btn-enable {
+      background: var(--accent);
+      border: none;
+      border-radius: 2px;
+      color: var(--void);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 10px 18px;
+      transition: filter 0.15s;
+    }
+    .notif-modal-actions .btn-enable:hover { filter: brightness(1.2); }
 
     /* Toast */
     #toast {
@@ -909,7 +996,7 @@
   <div class="controls">
     <button class="btn btn-icon" id="auxBtnEl" title="Reset (R)" onclick="onAuxBtn()">↺</button>
     <button class="btn btn-main" id="mainBtnEl"       onclick="onMainBtn()">Start</button>
-    <button class="btn btn-icon" title="Skip (N / →)" onclick="skipPhase()">⏭</button>
+    <button class="btn btn-icon" id="skipBtnEl" title="Skip to Break (N / →)" onclick="skipPhase()">⏭</button>
   </div>
 
 </main>
@@ -1015,9 +1102,23 @@
       <label>Browser notifications</label>
       <button class="notif-status" id="notifStatusEl" onclick="requestNotifications()">Enable</button>
     </div>
+    <div class="notif-help" id="notifHelpEl"></div>
   </div>
   <button class="apply-btn" onclick="applySettings()">Apply Settings</button>
   <button class="flat-btn" style="margin-top:10px" onclick="resetDotCount()">Reset dot count</button>
+</div>
+
+<div class="notif-modal-backdrop" id="notifModalEl">
+  <div class="notif-modal">
+    <div class="notif-modal-title">Stay in the loop</div>
+    <div class="notif-modal-body">
+      When a session ends, a desktop alert can nudge you even if you've switched windows. You can change this any time in Settings.
+    </div>
+    <div class="notif-modal-actions">
+      <button class="btn-skip" onclick="dismissNotifModal(false)">Not now</button>
+      <button class="btn-enable" onclick="dismissNotifModal(true)">Enable</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>

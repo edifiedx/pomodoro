@@ -13,15 +13,28 @@ function updateRing() {
 function p2(n) { return String(n).padStart(2, '0'); }
 
 function refreshUI() {
-  const m       = Math.floor(S.remainingSec / 60);
-  const s       = S.remainingSec % 60;
-  const timeStr = `${p2(m)}:${p2(s)}`;
+  const overflowSec = S.alarmPending && S.alarmStartTime
+    ? Math.max(0, Math.floor((Date.now() - S.alarmStartTime) / 1000))
+    : 0;
+  const signedSec = S.alarmPending ? -overflowSec : S.remainingSec;
+  const absSec = Math.abs(signedSec);
+  const m = Math.floor(absSec / 60);
+  const s = absSec % 60;
+  const timeStr = `${signedSec < 0 ? '-' : ''}${p2(m)}:${p2(s)}`;
 
   document.getElementById('timeDisplayEl').textContent = timeStr;
 
+  const nextName = S.phase === 'work' ? 'Break' : 'Work';
   let status = 'Ready';
-  if (S.alarmPending)                       status = 'Click NEXT ↑';
-  else if (S.running)                       status = 'Running';
+  if (S.alarmPending) {
+    if (S.alarmStyle === 'snooze') {
+      const secToSnooze = Math.max(0, Math.ceil(((S.nextAlarmAt || Date.now()) - Date.now()) / 1000));
+      status = `Snooze ${p2(Math.floor(secToSnooze / 60))}:${p2(secToSnooze % 60)}`;  
+    } else {
+      status = 'Alarm sounding';
+    }
+  }
+  else if (S.running)                       status = S.phase === 'work' ? 'Working' : 'Breaking';
   else if (S.remainingSec < S.totalSec)     status = 'Paused';
   document.getElementById('timeStatusEl').textContent = status;
 
@@ -37,8 +50,14 @@ function refreshUI() {
 
   const btn = document.getElementById('mainBtnEl');
   const auxBtn = document.getElementById('auxBtnEl');
+  const skipBtn = document.getElementById('skipBtnEl');
+
+  if (skipBtn) {
+    skipBtn.title = `${nextName} (N / →)`;
+  }
+
   if (S.alarmPending) {
-    btn.textContent = '→ Next';
+    btn.textContent = nextName;
     btn.classList.add('alarm');
   } else {
     btn.classList.remove('alarm');
@@ -63,6 +82,8 @@ function refreshUI() {
   document.title = (S.running || S.alarmPending)
     ? `${timeStr} · ${LABELS[S.phase]}`
     : 'Pomodoro';
+
+  if (typeof persistRuntimeState === 'function') persistRuntimeState();
 }
 
 function renderDots() {
@@ -199,15 +220,52 @@ function formatMins(secs) {
   return s ? `${m}m ${s}s` : `${m}m`;
 }
 
+/* ── Notification onboarding modal ── */
+
+const NOTIF_PROMPTED_KEY = 'pomo-notif-prompted';
+
+function shouldShowNotifModal() {
+  if (!('Notification' in window)) return false;
+  if (!window.isSecureContext) return false;
+  if (Notification.permission !== 'default') return false;
+  return !localStorage.getItem(NOTIF_PROMPTED_KEY);
+}
+
+function showNotifModal() {
+  document.getElementById('notifModalEl').classList.add('open');
+}
+
+async function dismissNotifModal(enable) {
+  document.getElementById('notifModalEl').classList.remove('open');
+  localStorage.setItem(NOTIF_PROMPTED_KEY, '1');
+  if (enable) {
+    const result = await Notification.requestPermission();
+    updateNotifStatus();
+    if (result === 'granted') showToast('Notifications enabled');
+    else showToast('Notifications blocked — check browser settings');
+  }
+}
+
 /* ── Browser notifications ── */
 
 async function requestNotifications() {
   if (!('Notification' in window)) {
     showToast('Notifications not supported in this browser');
+    updateNotifStatus();
+    return;
+  }
+  if (!window.isSecureContext) {
+    showToast('Notifications require https:// or localhost');
+    updateNotifStatus();
     return;
   }
   if (Notification.permission === 'granted') {
     showToast('Notifications already enabled');
+    updateNotifStatus();
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    showToast('Notifications blocked in browser site settings');
     updateNotifStatus();
     return;
   }
@@ -219,21 +277,35 @@ async function requestNotifications() {
 
 function updateNotifStatus() {
   const el = document.getElementById('notifStatusEl');
+  const help = document.getElementById('notifHelpEl');
   if (!('Notification' in window)) {
     el.textContent = 'Not supported';
     el.className   = 'notif-status denied';
+    el.disabled = true;
+    if (help) help.textContent = 'This browser does not support desktop notifications.';
     return;
   }
+  if (!window.isSecureContext) {
+    el.textContent = 'Unavailable';
+    el.className = 'notif-status denied';
+    el.disabled = true;
+    if (help) help.textContent = 'Desktop notifications require https:// or localhost. file:// pages cannot keep notification permission.';
+    return;
+  }
+  el.disabled = false;
   const p = Notification.permission;
   if (p === 'granted') {
     el.textContent = '✓ Enabled';
     el.className   = 'notif-status granted';
+    if (help) help.textContent = 'Allowed for this site in your browser settings and should persist across refreshes.';
   } else if (p === 'denied') {
     el.textContent = '✗ Blocked';
     el.className   = 'notif-status denied';
+    if (help) help.textContent = 'Blocked by browser site settings. Re-enable it there to receive desktop alerts.';
   } else {
     el.textContent = 'Enable';
     el.className   = 'notif-status';
+    if (help) help.textContent = 'Not enabled yet. Click Enable to allow desktop alerts for completed sessions.';
   }
 }
 
