@@ -18,7 +18,7 @@ const RING_CIRC = 2 * Math.PI * RING_R;
 const CFG = {
   workMins:           25,
   shortBreakMins:     5,
-  longBreakMins:      15,
+  longBreakMins:      30,
   sessionsBeforeLong: 4,
   snoozeIntervalSec:  60,
   alarmAutoEndMins:   30,

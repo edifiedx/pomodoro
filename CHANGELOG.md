@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 - Timer recovery and stale-session boundary flow improvements
 - Session controls redesign (`New` / `Stop` / `Reset` / `Next`)
 
+## [0.4.0] - 2026-06-29
+
+### Changed
+- Long break default increased from 15 to 30 minutes
+- "Open Full What's New" action now opens `CHANGELOG.md` as the full history source
+
 ## [0.3.0] - 2026-06-28
 
 ### Added
