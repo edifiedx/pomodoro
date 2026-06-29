@@ -8,6 +8,18 @@ All notable changes to this project will be documented in this file.
 - Timer recovery and stale-session boundary flow improvements
 - Session controls redesign (`New` / `Stop` / `Reset` / `Next`)
 
+## [0.3.0] - 2026-06-28
+
+### Added
+- Notification onboarding modal shown on first Start, explaining permissions before requesting them
+- Idle alarm auto-end defaulted to 30 minutes
+- Data transparency / ownership groundwork in the backlog
+
+### Changed
+- `Reset` now resets the session cycle, while `Stop` handles the timer only
+- Main alarm/status UI now uses phase-aware labels and snooze countdown text
+- Status line and button chrome tightened for better contrast over the accretion disk
+
 ## [0.2.0] - 2026-06-28
 
 ### Added

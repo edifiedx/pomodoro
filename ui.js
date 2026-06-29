@@ -72,7 +72,7 @@ function refreshUI() {
       auxBtn.title = S.alarmPending ? 'End session' : 'Stop session';
     } else {
       auxBtn.textContent = '↺';
-      auxBtn.title = 'Reset (R)';
+      auxBtn.title = 'Reset sessions (R)';
     }
   }
 

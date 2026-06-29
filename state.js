@@ -21,7 +21,7 @@ const CFG = {
   longBreakMins:      15,
   sessionsBeforeLong: 4,
   snoozeIntervalSec:  60,
-  alarmAutoEndMins:   0,
+  alarmAutoEndMins:   30,
   dotMode:            'cycle',
   toastsEnabled:      true,
 };

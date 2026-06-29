@@ -6,6 +6,7 @@
 
 # Copilot / AI agent config
 .claude/
+CLAUDE.md
 
 # OS cruft
 .DS_Store

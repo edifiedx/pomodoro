@@ -370,21 +370,23 @@ function onMainBtn() {
   }
 }
 
-function resetTimer() {
+function resetSessions() {
   pauseTimer();
   settlePausedTime();
   dismissAlarm();
-  S.phaseStartTime = null;
-  S.pauseStartedAt = null;
-  S.pausedMs       = 0;
-  S.remainingSec   = S.totalSec;
-  refreshUI();
+
+  S.cycleWorkDone = 0;
+  setPhase('work');
+  resetLabel();
+  savePrefs();
+
+  showToast('Session cycle reset');
   playClick();
 }
 
 function onAuxBtn() {
   if (S.running || S.alarmPending || S.remainingSec < S.totalSec) endSession();
-  else resetTimer();
+  else resetSessions();
 }
 
 function skipPhase() {
@@ -527,7 +529,7 @@ document.addEventListener('keydown', e => {
     case 'n': case 'N':
     case 'ArrowRight':
       if (S.alarmPending) onMainBtn(); else skipPhase(); break;
-    case 'r': case 'R':      resetTimer(); break;
+    case 'r': case 'R':      resetSessions(); break;
     case 'Escape':
       if (S.alarmPending) { endSession(); } break;
   }

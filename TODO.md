@@ -41,9 +41,7 @@
 - **Notification permission explainer**: Add UX copy/step before requesting browser notification permission so users understand why permission is needed instead of being prompted immediately.
 - **Rethink current pause/past-timer visuals**: Current `Pause By Phase` and `Past Timer` implementation is temporary. Redesign after recovery/session-boundary decisions are finalized.
 
-- **CSV export**: Add CSV export option in addition to JSON export for easier spreadsheet analysis.
-
----
+- **Data transparency & ownership**: Add a brief visible statement (Settings panel or Stats footer) explaining what is stored locally: session records in IndexedDB, preferences in localStorage, no external servers, no accounts. User owns their data and can export or clear it at any time. Export already exists (JSON); clearing is not yet surfaced in the UI.
 
 ## Backend / Accounts (Low Priority)
 
@@ -66,6 +64,8 @@
 ## Notes / Status
 
 - **Semantic versioning**: Start project versioning at `0.1.0` and maintain future updates via semver.
+
+- **Done**: `user-select: none` applied body-wide with input carve-out; drag-selection artifacts resolved.
 
 - **Done**: Removed hidden legacy ellipse disk markup from `index.html`.
 
