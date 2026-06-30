@@ -399,14 +399,14 @@
     /* Stats */
     .stat-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       border-top: 1px solid var(--rim);
       border-left: 1px solid var(--rim);
-      margin-bottom: 28px;
+      margin-bottom: 20px;
     }
-    .stat-card { padding: 18px 14px; border-right: 1px solid var(--rim); border-bottom: 1px solid var(--rim); }
-    .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 38px; font-weight: 400; line-height: 1; letter-spacing: 3px; color: var(--star); }
-    .stat-lbl { font-family: 'IBM Plex Sans', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--nebula); margin-top: 6px; }
+    .stat-card { padding: 14px 12px; border-right: 1px solid var(--rim); border-bottom: 1px solid var(--rim); }
+    .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; font-weight: 400; line-height: 1; letter-spacing: 2px; color: var(--star); }
+    .stat-lbl { font-family: 'IBM Plex Sans', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--nebula); margin-top: 4px; }
 
     .chart-card { margin-bottom: 20px; }
     .chart-title { font-family: 'IBM Plex Sans', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--nebula); margin-bottom: 14px; }
@@ -416,6 +416,137 @@
     .chart-bar { width: 100%; background: var(--nebula); min-height: 2px; opacity: 0.35; }
     .chart-bar.today { opacity: 1; background: var(--accent); }
     .chart-day { font-family: 'IBM Plex Sans', sans-serif; font-size: 8px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--nebula); }
+
+    .timeline-card {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .timeline-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .timeline-legend {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .timeline-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 7px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--nebula);
+    }
+    .timeline-swatch {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .timeline-swatch.work { background: #F0A030; }
+    .timeline-swatch.break { background: #5BA8D4; }
+    .timeline-swatch.long { background: #4AA870; }
+    .timeline-swatch.work-overflow { background: #A66E16; }
+    .timeline-swatch.break-overflow { background: #3D7394; }
+    .timeline-swatch.long-overflow { background: #326E49; }
+    .timeline-swatch.idle { background: var(--rim); }
+    .timeline-toggle {
+      background: none;
+      border: 1px solid var(--rim);
+      color: var(--nebula);
+      border-radius: 2px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .timeline-toggle:hover { color: var(--star); border-color: var(--nebula); }
+    .timeline-toggle.off { opacity: 0.65; }
+    .timeline-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-top: 1px solid var(--rim);
+      border-bottom: 1px solid var(--rim);
+      padding: 8px 0;
+    }
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .timeline-day {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--nebula);
+      text-align: left;
+    }
+    .timeline-track {
+      position: relative;
+      height: 8px;
+      border: 1px solid var(--rim);
+      background: rgba(255,255,255,0.02);
+      overflow: hidden;
+    }
+    .timeline-seg {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      min-width: 1px;
+      opacity: 0.8;
+      transition: opacity 0.12s, filter 0.12s, transform 0.12s;
+    }
+    .timeline-seg:hover {
+      opacity: 1;
+      filter: brightness(1.15);
+      transform: scaleY(1.18);
+      transform-origin: center;
+      box-shadow: 0 0 0 1px var(--nebula), 0 0 10px rgba(91,168,212,0.25);
+      z-index: 2;
+    }
+    .timeline-seg.s-work { background: #F0A030; }
+    .timeline-seg.s-work-overflow { background: #A66E16; }
+    .timeline-seg.s-short-break { background: #5BA8D4; }
+    .timeline-seg.s-short-break-overflow { background: #3D7394; }
+    .timeline-seg.s-long-break { background: #4AA870; }
+    .timeline-seg.s-long-break-overflow { background: #326E49; }
+    .timeline-seg.s-paused { background: #8C7BBF; }
+    .timeline-seg.s-idle { background: var(--rim); opacity: 0.45; }
+    .timeline-tip {
+      position: fixed;
+      z-index: 1001;
+      display: none;
+      pointer-events: none;
+      background: var(--surface);
+      border: 1px solid var(--rim);
+      border-radius: 2px;
+      color: var(--star);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 8px 10px;
+      white-space: pre-line;
+      line-height: 1.45;
+      box-shadow: 0 0 0 1px rgba(91,168,212,0.2), 0 8px 24px rgba(0,0,0,0.45);
+    }
 
     .whatsnew-card { margin-bottom: 20px; }
     .wn-version {
@@ -898,23 +1029,23 @@
               values="79 102 130; 81 102 130; 79 102 130"
               dur="22s" repeatCount="indefinite" calcMode="spline"
               keySplines=".45 0 .55 1; .45 0 .55 1" keyTimes="0; .5; 1"/>
-            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M  -8 68 C -18 118  -72 126 -112 130"/>
-            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M  -8 72 C -17 118  -66 125 -103 130"/>
-            <path class="disk-ring" stroke-width="1.1"  filter="url(#disk-glow)" d="M  -8 76 C -16 118  -58 125  -92 130"/>
-            <path class="disk-ring" stroke-width="1.8"  filter="url(#disk-glow)" d="M  -8 80 C -14 117  -50 123  -80 130"/>
-            <path class="disk-ring" stroke-width="1.3"  filter="url(#disk-glow)" d="M  -8 84 C -12 115  -43 121  -70 130"/>
-            <path class="disk-ring" stroke-width="1.0"  filter="url(#disk-glow)" d="M  -8 88 C -10 113  -35 118  -60 130"/>
-            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M  -8 92 C  -9 111  -28 116  -50 130"/>
-            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M  -8 96 C  -8 108  -22 114  -40 130"/>
+            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M -12 68 C -20 118  -72 126 -112 130"/>
+            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M -12 72 C -19 118  -66 125 -103 130"/>
+            <path class="disk-ring" stroke-width="1.1"  filter="url(#disk-glow)" d="M -12 76 C -18 118  -58 125  -92 130"/>
+            <path class="disk-ring" stroke-width="1.8"  filter="url(#disk-glow)" d="M -12 80 C -16 117  -50 123  -80 130"/>
+            <path class="disk-ring" stroke-width="1.3"  filter="url(#disk-glow)" d="M -12 84 C -14 115  -43 121  -70 130"/>
+            <path class="disk-ring" stroke-width="1.0"  filter="url(#disk-glow)" d="M -12 88 C -12 113  -35 118  -60 130"/>
+            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M -12 92 C -11 111  -28 116  -50 130"/>
+            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M -12 96 C -10 108  -22 114  -40 130"/>
 
-            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M 222 68 C 232 118  290 126  316 130"/>
-            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M 222 72 C 231 118  280 125  307 130"/>
-            <path class="disk-ring" stroke-width="1.1"  filter="url(#disk-glow)" d="M 222 76 C 230 118  270 125  296 130"/>
-            <path class="disk-ring" stroke-width="1.8"  filter="url(#disk-glow)" d="M 222 80 C 228 117  260 123  284 130"/>
-            <path class="disk-ring" stroke-width="1.3"  filter="url(#disk-glow)" d="M 222 84 C 226 115  254 121  274 130"/>
-            <path class="disk-ring" stroke-width="1.0"  filter="url(#disk-glow)" d="M 222 88 C 224 113  249 118  264 130"/>
-            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M 222 92 C 223 111  242 116  254 130"/>
-            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M 222 96 C 222 108  236 114  244 130"/>
+            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M 226 68 C 234 118  290 126  316 130"/>
+            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M 226 72 C 233 118  280 125  307 130"/>
+            <path class="disk-ring" stroke-width="1.1"  filter="url(#disk-glow)" d="M 226 76 C 232 118  270 125  296 130"/>
+            <path class="disk-ring" stroke-width="1.8"  filter="url(#disk-glow)" d="M 226 80 C 230 117  260 123  284 130"/>
+            <path class="disk-ring" stroke-width="1.3"  filter="url(#disk-glow)" d="M 226 84 C 228 115  254 121  274 130"/>
+            <path class="disk-ring" stroke-width="1.0"  filter="url(#disk-glow)" d="M 226 88 C 226 113  249 118  264 130"/>
+            <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M 226 92 C 225 111  242 116  254 130"/>
+            <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M 226 96 C 224 108  236 114  244 130"/>
           </g>
         </g>
       </g>
@@ -925,14 +1056,14 @@
           values="79 102 130; 81 102 130; 79 102 130"
           dur="22s" repeatCount="indefinite" calcMode="spline"
           keySplines=".45 0 .55 1; .45 0 .55 1" keyTimes="0; .5; 1"/>
-        <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M  -8 68 A 120 120 0 0 1 222 68"/>
-        <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M  -8 72 A 119 119 0 0 1 222 72"/>
-        <path class="disk-ring" stroke-width="1.1"  filter="url(#disk-glow)" d="M  -8 76 A 118 118 0 0 1 222 76"/>
-        <path class="disk-ring" stroke-width="1.8"  filter="url(#disk-glow)" d="M  -8 80 A 117 117 0 0 1 222 80"/>
-        <path class="disk-ring" stroke-width="1.3"  filter="url(#disk-glow)" d="M  -8 84 A 116 116 0 0 1 222 84"/>
-        <path class="disk-ring" stroke-width="1.0"  filter="url(#disk-glow)" d="M  -8 88 A 116 116 0 0 1 222 88"/>
-        <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M  -8 92 A 115 115 0 0 1 222 92"/>
-        <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M  -8 96 A 115 115 0 0 1 222 96"/>
+        <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M -12 68 A 124 124 0 0 1 226 68"/>
+        <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M -12 72 A 123 123 0 0 1 226 72"/>
+        <path class="disk-ring" stroke-width="1.1"  filter="url(#disk-glow)" d="M -12 76 A 122 122 0 0 1 226 76"/>
+        <path class="disk-ring" stroke-width="1.8"  filter="url(#disk-glow)" d="M -12 80 A 121 121 0 0 1 226 80"/>
+        <path class="disk-ring" stroke-width="1.3"  filter="url(#disk-glow)" d="M -12 84 A 120 120 0 0 1 226 84"/>
+        <path class="disk-ring" stroke-width="1.0"  filter="url(#disk-glow)" d="M -12 88 A 120 120 0 0 1 226 88"/>
+        <path class="disk-ring" stroke-width="0.7"  filter="url(#disk-glow)" d="M -12 92 A 119 119 0 0 1 226 92"/>
+        <path class="disk-ring" stroke-width="0.45" filter="url(#disk-glow)" d="M -12 96 A 119 119 0 0 1 226 96"/>
       </g>
 
       <!-- Near-side disk arc sits in front and remains visible across the hole. -->
@@ -1004,30 +1135,29 @@
 <!-- Stats Panel -->
 <div class="panel" id="statsPanel">
   <div class="stat-grid">
-    <div class="stat-card"><div class="stat-val" id="sToday">0</div><div class="stat-lbl">Today</div></div>
-    <div class="stat-card"><div class="stat-val" id="sStreak">0</div><div class="stat-lbl">Day Streak</div></div>
     <div class="stat-card"><div class="stat-val" id="sFocus">0m</div><div class="stat-lbl">Focus Today</div></div>
+    <div class="stat-card"><div class="stat-val" id="sOverflowRate">0%</div><div class="stat-lbl">Overflow Rate</div></div>
+    <div class="stat-card"><div class="stat-val" id="sCurrentSession">0m</div><div class="stat-lbl">Current Session</div></div>
+    <div class="stat-card"><div class="stat-val" id="sToday">0</div><div class="stat-lbl">Today</div></div>
+    <div class="stat-card"><div class="stat-val" id="sStreak">0</div><div class="stat-lbl">Streak</div></div>
     <div class="stat-card"><div class="stat-val" id="sTotal">0</div><div class="stat-lbl">All Time</div></div>
-    <div class="stat-card"><div class="stat-val" id="sPastTimerToday">0s</div><div class="stat-lbl">Past Timer Today</div></div>
-    <div class="stat-card"><div class="stat-val" id="sPastTimerAvg">0s</div><div class="stat-lbl">Avg Past Timer</div></div>
-    <div class="stat-card"><div class="stat-val" id="sPauseToday">0s</div><div class="stat-lbl">Pause Today</div></div>
-    <div class="stat-card"><div class="stat-val" id="sPauseAvg">0s</div><div class="stat-lbl">Avg Pause</div></div>
   </div>
-  <div class="chart-card">
-    <div class="chart-title">Last 7 Days</div>
-    <div class="chart-bars" id="chartBarsEl"></div>
-  </div>
-  <div class="delay-card">
-    <div class="chart-title">Past Timer By Phase</div>
-    <div class="delay-legend">
-      <div class="delay-legend-item"><span class="delay-swatch ontime"></span>On time</div>
-      <div class="delay-legend-item"><span class="delay-swatch delayed"></span>Past timer</div>
+  <div class="timeline-card">
+    <div class="chart-title">24h State Timeline (Last 7 Days)</div>
+    <div class="timeline-controls">
+      <div class="timeline-legend">
+        <div class="timeline-legend-item"><span class="timeline-swatch work"></span>Work</div>
+        <div class="timeline-legend-item"><span class="timeline-swatch break"></span>Break</div>
+        <div class="timeline-legend-item"><span class="timeline-swatch long"></span>Long</div>
+        <div class="timeline-legend-item"><span class="timeline-swatch work-overflow"></span>Work Ov</div>
+        <div class="timeline-legend-item"><span class="timeline-swatch break-overflow"></span>Break Ov</div>
+        <div class="timeline-legend-item"><span class="timeline-swatch long-overflow"></span>Long Ov</div>
+        <div class="timeline-legend-item"><span class="timeline-swatch idle"></span>Idle</div>
+      </div>
+      <button class="timeline-toggle" id="timelineIdleToggleEl" onclick="toggleTimelineIdle()">Hide Idle</button>
     </div>
-    <div class="delay-breakdown" id="delayBreakdownEl"></div>
-  </div>
-  <div class="delay-card">
-    <div class="chart-title">Pause By Phase</div>
-    <div class="delay-breakdown" id="pauseBreakdownEl"></div>
+    <div class="timeline-wrap" id="timelineStripsEl"></div>
+    <div class="timeline-tip" id="timelineTipEl"></div>
   </div>
   <button class="flat-btn" onclick="exportJSON()">↓ Export as JSON</button>
 </div>

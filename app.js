@@ -40,6 +40,7 @@ function persistRuntimeState() {
       nextAlarmAt:   S.nextAlarmAt,
       pauseStartedAt:S.pauseStartedAt,
       pausedMs:      S.pausedMs,
+      pauseSessions: S.pauseSessions,
       currentLabel:  S.currentLabel,
       savedAt:       Date.now(),
     }));
@@ -70,6 +71,10 @@ async function restoreRuntimeState() {
     S.phaseStartTime = Number.isFinite(snap.phaseStartTime) ? snap.phaseStartTime : null;
     S.pauseStartedAt = Number.isFinite(snap.pauseStartedAt) ? snap.pauseStartedAt : null;
     S.pausedMs = Number.isFinite(snap.pausedMs) ? snap.pausedMs : 0;
+    S.pauseSessions = Array.isArray(snap.pauseSessions)
+      ? snap.pauseSessions
+          .filter(p => Number.isFinite(p?.startTime) && Number.isFinite(p?.endTime) && p.endTime > p.startTime)
+      : [];
     S.alarmStartTime = Number.isFinite(snap.alarmStartTime) ? snap.alarmStartTime : null;
     S.nextAlarmAt = Number.isFinite(snap.nextAlarmAt) ? snap.nextAlarmAt : null;
 
@@ -122,7 +127,9 @@ async function restoreRuntimeState() {
 
 function settlePausedTime() {
   if (!S.pauseStartedAt) return;
-  S.pausedMs += Date.now() - S.pauseStartedAt;
+  const pauseEnd = Date.now();
+  S.pausedMs += pauseEnd - S.pauseStartedAt;
+  S.pauseSessions.push({ startTime: S.pauseStartedAt, endTime: pauseEnd });
   S.pauseStartedAt = null;
 }
 
@@ -193,6 +200,7 @@ function recordPartialPhase() {
       plannedDuration: S.totalSec,
       actualDuration: elapsed,
       pausedDuration: Math.round(S.pausedMs / 1000),
+      pauseSessions: S.pauseSessions.slice(),
       completed: false,
       snoozedFor: 0,
       label: S.currentLabel,
@@ -217,6 +225,7 @@ function endSession() {
   S.phaseStartTime = null;
   S.pauseStartedAt = null;
   S.pausedMs       = 0;
+  S.pauseSessions  = [];
   S.remainingSec   = S.totalSec;
   refreshUI();
   playClick();
@@ -240,6 +249,7 @@ async function phaseComplete() {
     plannedDuration: S.totalSec,
     actualDuration:  Math.round((now - start) / 1000),
     pausedDuration:  Math.round(S.pausedMs / 1000),
+    pauseSessions:   S.pauseSessions.slice(),
     completed:       true,
     snoozedFor:      0,
     label:           S.phase === 'work' ? S.currentLabel : '',
@@ -247,6 +257,7 @@ async function phaseComplete() {
   S.phaseStartTime = null;
   S.pausedMs = 0;
   S.pauseStartedAt = null;
+  S.pauseSessions = [];
 
   if (S.phase === 'work') {
     S.cycleWorkDone++;
@@ -311,7 +322,7 @@ function dismissAlarm() {
   alarmId = null;
   clearAlarmAutoEnd();
   if (S.alarmStartTime) {
-    dbPatchLastSnoozed(Math.round((Date.now() - S.alarmStartTime) / 1000));
+    dbPatchLastSnoozed(Math.round((Date.now() - S.alarmStartTime) / 1000), S.phase);
     S.alarmStartTime = null;
   }
 }
@@ -335,6 +346,7 @@ function setPhase(phase) {
   S.phaseStartTime = null;
   S.pauseStartedAt = null;
   S.pausedMs       = 0;
+  S.pauseSessions  = [];
   S.alarmStartTime = null;
   S.nextAlarmAt    = null;
   clearOverflowTimer();

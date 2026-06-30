@@ -43,6 +43,39 @@
 
 - **Data transparency & ownership**: Add a brief visible statement (Settings panel or Stats footer) explaining what is stored locally: session records in IndexedDB, preferences in localStorage, no external servers, no accounts. User owns their data and can export or clear it at any time. Export already exists (JSON); clearing is not yet surfaced in the UI.
 
+---
+
+## Stats Tracking / Analytics
+
+- **Canonical tracked states**: Track and aggregate time in these explicit buckets: `Work`, `Work overflow`, `Break`, `Break overflow`, `Long break`, `Long break overflow`, `Paused`, `Idle`.
+
+- **Current tracking baseline (implemented)**:
+	- Persist explicit `overflowType` on session records (going forward)
+	- Persist pause intervals as timestamp ranges (`pauseSessions`) in runtime and saved session records
+	- Keep legacy `snoozedFor` for duration math and compatibility
+	- One-off migration path exists to backfill `overflowType` on old records
+
+- **24h timeline strips**: Add a full-day timeline (00:00 to 24:00) rendered as contiguous colored segments by state. Support per-day view and a rolling 7-day stack of daily strips.
+
+- **Distribution donuts**: Add donut charts for state distribution with ranges: current day and rolling 7 days first; keep room for 30 and 365 day ranges later.
+
+- **Idle visibility toggle**: Add toggle to include/exclude `Idle` time in distribution charts and percentages.
+
+- **Stacked 7-day comparison bars**: Add a stacked bar chart for the rolling 7-day window where each bar is one day and each stack segment is one tracked state bucket (planned replacement for retired legacy "Last 7 Days" bar chart).
+
+- **Overflow-focused chart (exploratory)**: Prototype a dedicated overflow chart comparing base vs overflow load for work/break/long-break (evaluate mirrored-above/below or grouped alternatives).
+
+- **Key summary cards (lightweight)**: Keep cards minimal but include at least:
+	- Today's focus minutes (`Work + Work overflow`)
+	- Overflow rate (percent of sessions and/or overflow volume; test both)
+	- Current session minutes (any active session state excluding idle)
+
+- **Data model prep for analytics**: Ensure session/event records can be segmented into the state buckets above with accurate timestamps for timeline rendering.
+
+- **Retired legacy charts**: Keep the old `Last 7 Days` count bars and `Past Timer By Phase` chart removed while timeline-driven and stacked-state views are being built.
+
+- **Maybe: historical correction tools**: Consider lightweight edit controls for past sessions (especially pause windows) so users can correct accidental long pauses/timeouts after the fact. Keep this optional and explicit.
+
 ## Backend / Accounts (Low Priority)
 
 - **Cloud sync exploration**: Evaluate a free/cheap backend option (`Firebase`, `Supabase`, `Heroku`-style hosting, etc.) for optional OAuth login + cloud-persisted user data.

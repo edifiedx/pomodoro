@@ -40,6 +40,7 @@ const S = {
   nextAlarmAt:     null,
   pauseStartedAt:  null,
   pausedMs:        0,
+  pauseSessions:   [],
   currentLabel:    DEFAULT_LABEL,
   advanceMode:     'manual',
   alarmStyle:      'snooze',

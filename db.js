@@ -36,12 +36,19 @@ function dbGetAll() {
   });
 }
 
-function dbPatchLastSnoozed(snoozedSec) {
+function dbPatchLastSnoozed(snoozedSec, phaseType) {
   if (!db || snoozedSec <= 0) return;
   const tx  = db.transaction('sessions', 'readwrite');
   const req = tx.objectStore('sessions').openCursor(null, 'prev');
   req.onsuccess = e => {
     const cur = e.target.result;
-    if (cur) { const rec = cur.value; rec.snoozedFor = snoozedSec; cur.update(rec); }
+    if (cur) {
+      const rec = cur.value;
+      rec.snoozedFor = snoozedSec;
+      if (phaseType && phaseType !== 'idle' && phaseType !== 'paused') {
+        rec.overflowType = `${phaseType}-overflow`;
+      }
+      cur.update(rec);
+    }
   };
 }

@@ -473,108 +473,6 @@ function formatDelay(secs) {
   return `${mins}m ${rem}s`;
 }
 
-function formatPhaseLabel(type) {
-  return type === 'work' ? 'Work'
-    : type === 'short-break' ? 'Short'
-    : 'Long';
-}
-
-function renderDelayBreakdown(sessions) {
-  const el = document.getElementById('delayBreakdownEl');
-  if (!el) return;
-  el.innerHTML = '';
-
-  const rows = ['work', 'short-break', 'long-break'];
-
-  rows.forEach(key => {
-    const label = formatPhaseLabel(key);
-    const phaseSessions = sessions.filter(s => s.type === key);
-    const total = phaseSessions.length;
-    const pastTimer = phaseSessions.filter(s => (s.snoozedFor || 0) > 0).length;
-    const onTime = Math.max(0, total - pastTimer);
-    const pastTimerPct = total ? (pastTimer / total) * 100 : 0;
-    const onTimePct = total ? (onTime / total) * 100 : 0;
-
-    const row = document.createElement('div');
-    row.className = 'delay-row';
-
-    const phase = document.createElement('div');
-    phase.className = 'delay-phase';
-    phase.textContent = label;
-
-    const track = document.createElement('div');
-    track.className = 'delay-track';
-    track.title = total
-      ? `${label}: ${pastTimer} past timer / ${total} total`
-      : `${label}: no completed sessions yet`;
-
-    const onTimeFill = document.createElement('div');
-    onTimeFill.className = 'delay-fill-ontime';
-    onTimeFill.style.width = `${onTimePct}%`;
-
-    const delayedFill = document.createElement('div');
-    delayedFill.className = 'delay-fill-delayed';
-    delayedFill.style.width = `${pastTimerPct}%`;
-
-    track.appendChild(onTimeFill);
-    track.appendChild(delayedFill);
-
-    const meta = document.createElement('div');
-    meta.className = 'delay-meta';
-    meta.textContent = total ? `${pastTimer}/${total}` : '0/0';
-
-    row.appendChild(phase);
-    row.appendChild(track);
-    row.appendChild(meta);
-    el.appendChild(row);
-  });
-}
-
-function renderPauseBreakdown(sessions) {
-  const el = document.getElementById('pauseBreakdownEl');
-  if (!el) return;
-  el.innerHTML = '';
-
-  const rows = ['work', 'short-break', 'long-break'];
-  const totals = rows.map(key =>
-    sessions
-      .filter(s => s.type === key)
-      .reduce((sum, s) => sum + (s.pausedDuration || 0), 0)
-  );
-  const maxTotal = Math.max(1, ...totals);
-
-  rows.forEach((key, index) => {
-    const label = formatPhaseLabel(key);
-    const pausedSec = totals[index];
-    const widthPct = (pausedSec / maxTotal) * 100;
-
-    const row = document.createElement('div');
-    row.className = 'delay-row';
-
-    const phase = document.createElement('div');
-    phase.className = 'delay-phase';
-    phase.textContent = label;
-
-    const track = document.createElement('div');
-    track.className = 'delay-track';
-    track.title = `${label}: ${formatDelay(pausedSec)} paused`;
-
-    const fill = document.createElement('div');
-    fill.className = 'pause-fill';
-    fill.style.width = `${widthPct}%`;
-    track.appendChild(fill);
-
-    const meta = document.createElement('div');
-    meta.className = 'delay-meta';
-    meta.textContent = formatDelay(pausedSec);
-
-    row.appendChild(phase);
-    row.appendChild(track);
-    row.appendChild(meta);
-    el.appendChild(row);
-  });
-}
-
 /* ── Stats ── */
 
 async function loadStats() {
@@ -584,34 +482,31 @@ async function loadStats() {
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const ts         = todayStart.getTime();
   const todaySess  = workDone.filter(s => s.startTime >= ts);
-  const focusSec   = todaySess.reduce((a, s) => a + s.plannedDuration, 0);
-  const todayCompleted = completed.filter(s => s.startTime >= ts);
-  const pastTimerTodaySec = todayCompleted.reduce((a, s) => a + (s.snoozedFor || 0), 0);
+  const focusSec   = todaySess.reduce((a, s) => a + (s.actualDuration || 0) + (s.snoozedFor || 0), 0);
   const pastTimerSessions = completed.filter(s => (s.snoozedFor || 0) > 0);
-  const avgPastTimerSec   = pastTimerSessions.length
-    ? Math.round(pastTimerSessions.reduce((a, s) => a + s.snoozedFor, 0) / pastTimerSessions.length)
-    : 0;
-  const todaySessions = sessions.filter(s => s.startTime >= ts);
-  const pauseTodaySec = todaySessions.reduce((a, s) => a + (s.pausedDuration || 0), 0);
-  const pausedSessions = sessions.filter(s => (s.pausedDuration || 0) > 0);
-  const avgPauseSec    = pausedSessions.length
-    ? Math.round(pausedSessions.reduce((a, s) => a + s.pausedDuration, 0) / pausedSessions.length)
+  const overflowRatePct = completed.length
+    ? Math.round((pastTimerSessions.length / completed.length) * 100)
     : 0;
 
-  document.getElementById('sToday').textContent  = todaySess.length;
-  document.getElementById('sTotal').textContent  = workDone.length;
-  document.getElementById('sFocus').textContent  = focusSec >= 3600
+  let currentSessionSec = 0;
+  if (S.phaseStartTime) {
+    currentSessionSec = Math.max(0, Math.round((Date.now() - S.phaseStartTime) / 1000));
+  } else if (S.alarmPending && S.alarmStartTime) {
+    currentSessionSec = Math.max(0, Math.round((Date.now() - S.alarmStartTime) / 1000));
+  }
+
+  document.getElementById('sFocus').textContent         = focusSec >= 3600
     ? `${(focusSec / 3600).toFixed(1)}h`
     : `${Math.floor(focusSec / 60)}m`;
-  document.getElementById('sStreak').textContent = calcStreak(workDone);
-  document.getElementById('sPastTimerToday').textContent = formatDelay(pastTimerTodaySec);
-  document.getElementById('sPastTimerAvg').textContent   = formatDelay(avgPastTimerSec);
-  document.getElementById('sPauseToday').textContent     = formatDelay(pauseTodaySec);
-  document.getElementById('sPauseAvg').textContent       = formatDelay(avgPauseSec);
+  document.getElementById('sOverflowRate').textContent  = `${overflowRatePct}%`;
+  document.getElementById('sCurrentSession').textContent = currentSessionSec >= 3600
+    ? `${(currentSessionSec / 3600).toFixed(1)}h`
+    : `${Math.floor(currentSessionSec / 60)}m`;
+  document.getElementById('sToday').textContent         = todaySess.length;
+  document.getElementById('sStreak').textContent        = calcStreak(workDone);
+  document.getElementById('sTotal').textContent         = workDone.length;
 
-  renderChart(workDone);
-  renderDelayBreakdown(completed);
-  renderPauseBreakdown(sessions);
+  renderTimelineStrips(sessions);
 }
 
 function calcStreak(sessions) {
@@ -627,29 +522,174 @@ function calcStreak(sessions) {
   return streak;
 }
 
-function renderChart(sessions) {
-  const el  = document.getElementById('chartBarsEl');
-  el.innerHTML = '';
-  const DAY = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  let max    = 1;
-  const cols = [];
-  for (let i = 6; i >= 0; i--) {
-    const d     = new Date(); d.setDate(d.getDate() - i);
-    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    const count = sessions.filter(s => s.startTime >= start && s.startTime < start + 86400000).length;
-    if (count > max) max = count;
-    cols.push({ count, day: DAY[d.getDay()], today: i === 0 });
-  }
-  cols.forEach(({ count, day, today }) => {
-    const col  = document.createElement('div'); col.className = 'chart-col';
-    const area = document.createElement('div'); area.className = 'chart-bar-area';
-    const bar  = document.createElement('div'); bar.className = `chart-bar${today ? ' today' : ''}`;
-    bar.style.height = `${(count / max) * 100}%`;
-    bar.title        = `${count} session${count !== 1 ? 's' : ''}`;
-    const lbl  = document.createElement('div'); lbl.className = 'chart-day'; lbl.textContent = day;
-    area.appendChild(bar); col.appendChild(area); col.appendChild(lbl);
-    el.appendChild(col);
+function formatClock(ts) {
+  const d = new Date(ts);
+  return `${p2(d.getHours())}:${p2(d.getMinutes())}`;
+}
+
+function normalizeStateClass(state) {
+  return `s-${state.replace(/[^a-z0-9]+/g, '-')}`;
+}
+
+function timelineStateLabel(state) {
+  if (state === 'work') return 'Work';
+  if (state === 'work-overflow') return 'Work Overflow';
+  if (state === 'short-break') return 'Break';
+  if (state === 'short-break-overflow') return 'Break Overflow';
+  if (state === 'long-break') return 'Long Break';
+  if (state === 'long-break-overflow') return 'Long Break Overflow';
+  if (state === 'paused') return 'Paused';
+  return 'Idle';
+}
+
+let timelineIncludeIdle = true;
+let timelineSessionsCache = [];
+
+function updateTimelineIdleToggle() {
+  const btn = document.getElementById('timelineIdleToggleEl');
+  if (!btn) return;
+  btn.textContent = timelineIncludeIdle ? 'Hide Idle' : 'Show Idle';
+  btn.classList.toggle('off', !timelineIncludeIdle);
+}
+
+function toggleTimelineIdle() {
+  timelineIncludeIdle = !timelineIncludeIdle;
+  updateTimelineIdleToggle();
+  renderTimelineStrips(timelineSessionsCache);
+}
+
+function buildDayTimelineSegments(sessions, dayStart, dayEnd) {
+  const raw = [];
+
+  sessions.forEach(s => {
+    const start = s.startTime;
+    const end = s.endTime;
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
+    if (end <= dayStart || start >= dayEnd) return;
+
+    raw.push({
+      state: s.type,
+      start: Math.max(start, dayStart),
+      end: Math.min(end, dayEnd),
+      session: s,
+    });
+
+    const overflowSec = s.snoozedFor || 0;
+    if (overflowSec > 0 && Number.isFinite(s.endTime)) {
+      const ovStart = s.endTime;
+      const ovEnd = s.endTime + overflowSec * 1000;
+      if (ovEnd > dayStart && ovStart < dayEnd) {
+        raw.push({
+          state: s.overflowType || `${s.type}-overflow`,
+          start: Math.max(ovStart, dayStart),
+          end: Math.min(ovEnd, dayEnd),
+          session: s,
+        });
+      }
+    }
   });
+
+  raw.sort((a, b) => a.start - b.start || a.end - b.end);
+
+  const out = [];
+  let cursor = dayStart;
+  for (const seg of raw) {
+    if (seg.start > cursor) {
+      out.push({ state: 'idle', start: cursor, end: seg.start, session: null });
+    }
+    const start = Math.max(cursor, seg.start);
+    if (seg.end > start) {
+      out.push({ state: seg.state, start, end: seg.end, session: seg.session });
+      cursor = seg.end;
+    }
+  }
+  if (cursor < dayEnd) out.push({ state: 'idle', start: cursor, end: dayEnd, session: null });
+
+  return out;
+}
+
+function renderTimelineStrips(sessions) {
+  timelineSessionsCache = Array.isArray(sessions) ? sessions : [];
+  const wrap = document.getElementById('timelineStripsEl');
+  const tip = document.getElementById('timelineTipEl');
+  if (!wrap || !tip) return;
+
+  wrap.innerHTML = '';
+  tip.style.display = 'none';
+  updateTimelineIdleToggle();
+
+  const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  const showTip = (ev, text) => {
+    tip.textContent = text;
+    tip.style.display = 'block';
+    const x = Math.min(window.innerWidth - tip.offsetWidth - 10, ev.clientX + 14);
+    const y = Math.min(window.innerHeight - tip.offsetHeight - 10, ev.clientY + 14);
+    tip.style.left = `${Math.max(10, x)}px`;
+    tip.style.top = `${Math.max(10, y)}px`;
+  };
+  const hideTip = () => { tip.style.display = 'none'; };
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const dayEnd = dayStart + DAY_MS;
+
+    const row = document.createElement('div');
+    row.className = 'timeline-row';
+
+    const day = document.createElement('div');
+    day.className = 'timeline-day';
+    day.textContent = DAY[d.getDay()];
+
+    const track = document.createElement('div');
+    track.className = 'timeline-track';
+
+    const segments = buildDayTimelineSegments(timelineSessionsCache, dayStart, dayEnd);
+    const renderSegments = timelineIncludeIdle
+      ? segments
+      : segments.filter(seg => seg.state !== 'idle');
+
+    const activeTotalMs = !timelineIncludeIdle
+      ? renderSegments.reduce((sum, seg) => sum + Math.max(0, seg.end - seg.start), 0)
+      : 0;
+    let activeCursor = 0;
+
+    renderSegments.forEach(seg => {
+      const segEl = document.createElement('div');
+      segEl.className = `timeline-seg ${normalizeStateClass(seg.state)}`;
+
+      let leftPct;
+      let widthPct;
+      if (!timelineIncludeIdle && activeTotalMs > 0) {
+        const segMs = Math.max(0, seg.end - seg.start);
+        leftPct = (activeCursor / activeTotalMs) * 100;
+        widthPct = (segMs / activeTotalMs) * 100;
+        activeCursor += segMs;
+      } else {
+        leftPct = ((seg.start - dayStart) / DAY_MS) * 100;
+        widthPct = ((seg.end - seg.start) / DAY_MS) * 100;
+      }
+      segEl.style.left = `${leftPct}%`;
+      segEl.style.width = `${Math.max(0.15, widthPct)}%`;
+
+      const sec = Math.max(0, Math.round((seg.end - seg.start) / 1000));
+      const sessionTxt = seg.session && seg.session.id ? `session #${seg.session.id}` : 'session n/a';
+      const tipText = `${timelineStateLabel(seg.state)} - ${sessionTxt} - ${formatDelay(sec)}\n${formatClock(seg.start)} - ${formatClock(seg.end)}`;
+
+      segEl.addEventListener('mouseenter', e => showTip(e, tipText));
+      segEl.addEventListener('mousemove', e => showTip(e, tipText));
+      segEl.addEventListener('mouseleave', hideTip);
+
+      track.appendChild(segEl);
+    });
+
+    row.appendChild(day);
+    row.appendChild(track);
+    wrap.appendChild(row);
+  }
 }
 
 async function exportJSON() {
