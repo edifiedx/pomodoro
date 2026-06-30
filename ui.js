@@ -506,6 +506,7 @@ async function loadStats() {
   document.getElementById('sStreak').textContent        = calcStreak(workDone);
   document.getElementById('sTotal').textContent         = workDone.length;
 
+  renderSevenDayBars(sessions);
   renderTimelineStrips(sessions);
 }
 
@@ -606,6 +607,105 @@ function buildDayTimelineSegments(sessions, dayStart, dayEnd) {
   if (cursor < dayEnd) out.push({ state: 'idle', start: cursor, end: dayEnd, session: null });
 
   return out;
+}
+
+function renderSevenDayBars(sessions) {
+  const barsEl   = document.getElementById('sevenDayBarsEl');
+  const labelsEl = document.getElementById('sevenDayLabelsEl');
+  if (!barsEl || !labelsEl) return;
+  barsEl.innerHTML   = '';
+  labelsEl.innerHTML = '';
+
+  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const DAY_MS    = 24 * 60 * 60 * 1000;
+  const TRACK_H   = 64;
+
+  const STATE_ORDER = [
+    'work', 'work-overflow',
+    'short-break', 'short-break-overflow',
+    'long-break', 'long-break-overflow',
+    'paused',
+  ];
+  const STATE_COLORS = {
+    'work':                 '#F0A030',
+    'work-overflow':        '#A66E16',
+    'short-break':          '#5BA8D4',
+    'short-break-overflow': '#3D7394',
+    'long-break':           '#4AA870',
+    'long-break-overflow':  '#326E49',
+    'paused':               '#8C7BBF',
+  };
+
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const segs     = buildDayTimelineSegments(sessions, dayStart, dayStart + DAY_MS);
+    const totals   = {};
+    let totalSec   = 0;
+    for (const seg of segs) {
+      if (seg.state === 'idle') continue;
+      const sec = Math.max(0, Math.round((seg.end - seg.start) / 1000));
+      totals[seg.state] = (totals[seg.state] || 0) + sec;
+      totalSec += sec;
+    }
+    days.push({ label: DAY_NAMES[d.getDay()], totals, totalSec, isToday: i === 0 });
+  }
+
+  const maxSec = Math.max(...days.map(d => d.totalSec), 1);
+
+  const tipEl   = document.getElementById('timelineTipEl');
+  const showTip = (ev, text) => {
+    if (!tipEl) return;
+    tipEl.textContent  = text;
+    tipEl.style.display = 'block';
+    const x = Math.min(window.innerWidth  - tipEl.offsetWidth  - 10, ev.clientX + 14);
+    const y = Math.min(window.innerHeight - tipEl.offsetHeight - 10, ev.clientY + 14);
+    tipEl.style.left = `${Math.max(10, x)}px`;
+    tipEl.style.top  = `${Math.max(10, y)}px`;
+  };
+  const hideTip = () => { if (tipEl) tipEl.style.display = 'none'; };
+
+  for (const day of days) {
+    const barH = Math.round((day.totalSec / maxSec) * TRACK_H);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'sevenday-bar-wrap' + (day.isToday ? ' today' : '');
+
+    if (barH > 0) {
+      const bar = document.createElement('div');
+      bar.className    = 'sevenday-bar';
+      bar.style.height = barH + 'px';
+
+      let bottom = 0;
+      for (const state of STATE_ORDER) {
+        const sec = day.totals[state] || 0;
+        if (!sec) continue;
+        const segH = Math.max(1, Math.round((sec / day.totalSec) * barH));
+        const seg  = document.createElement('div');
+        seg.className       = 'sevenday-seg';
+        seg.style.background = STATE_COLORS[state];
+        seg.style.bottom    = bottom + 'px';
+        seg.style.height    = segH + 'px';
+        const tipText = `${timelineStateLabel(state)}\n${formatDelay(sec)}`;
+        seg.addEventListener('mouseenter', e => showTip(e, tipText));
+        seg.addEventListener('mousemove',  e => showTip(e, tipText));
+        seg.addEventListener('mouseleave', hideTip);
+        bar.appendChild(seg);
+        bottom += segH;
+      }
+
+      wrap.appendChild(bar);
+    }
+
+    barsEl.appendChild(wrap);
+
+    const lbl = document.createElement('div');
+    lbl.className   = 'sevenday-day' + (day.isToday ? ' today' : '');
+    lbl.textContent = day.label;
+    labelsEl.appendChild(lbl);
+  }
 }
 
 function renderTimelineStrips(sessions) {

@@ -28,8 +28,8 @@ The visuals are intentional, not decorative:
 - **Session labels** — tag what you're working on
 - **Alarm styles** — snooze (repeating reminder) or continuous
 - **End idle alarm** — configurable timeout to auto-advance when you're away
-- **Stats panel** — streak, focus time, past-timer overrun, pause totals, 7-day chart
-- **Phase-level metrics** — per-phase breakdown of on-time vs past-timer and pause duration
+- **Stats panel** — focus cards, 24h state timeline strips, stacked 7-day overview
+- **Phase-level analytics** — state buckets for work/break/long and overflow-aware tracking
 - **Session export** — download your history as JSON
 - **What's New panel** — curated in-app changelog
 - **Animated starfield** — cursor-interactive star orbits; collapse/erupt on phase transitions
@@ -80,4 +80,4 @@ python -m http.server
 
 This project uses [semantic versioning](https://semver.org). See [CHANGELOG.md](CHANGELOG.md) for the full history.
 
-Current version: **0.4.0**
+Current version: **0.5.0**

@@ -408,6 +408,48 @@
     .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; font-weight: 400; line-height: 1; letter-spacing: 2px; color: var(--star); }
     .stat-lbl { font-family: 'IBM Plex Sans', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--nebula); margin-top: 4px; }
 
+    .sevenday-card { margin-bottom: 20px; }
+    .sevenday-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 64px;
+      margin-bottom: 5px;
+    }
+    .sevenday-bar-wrap {
+      flex: 1;
+      position: relative;
+      height: 100%;
+    }
+    .sevenday-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      overflow: hidden;
+    }
+    .sevenday-seg {
+      position: absolute;
+      left: 0;
+      right: 0;
+      opacity: 0.72;
+      transition: opacity 0.1s, filter 0.1s;
+    }
+    .sevenday-seg:hover { opacity: 1; filter: brightness(1.15); }
+    .sevenday-bar-wrap.today .sevenday-seg { opacity: 0.9; }
+    .sevenday-days { display: flex; gap: 5px; }
+    .sevenday-day {
+      flex: 1;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--nebula);
+      text-align: center;
+    }
+    .sevenday-day.today { color: var(--star); }
+
     .chart-card { margin-bottom: 20px; }
     .chart-title { font-family: 'IBM Plex Sans', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--nebula); margin-bottom: 14px; }
     .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
@@ -1159,6 +1201,11 @@
     <div class="timeline-wrap" id="timelineStripsEl"></div>
     <div class="timeline-tip" id="timelineTipEl"></div>
   </div>
+  <div class="sevenday-card">
+    <div class="chart-title">7-Day Overview</div>
+    <div class="sevenday-bars" id="sevenDayBarsEl"></div>
+    <div class="sevenday-days" id="sevenDayLabelsEl"></div>
+  </div>
   <button class="flat-btn" onclick="exportJSON()">↓ Export as JSON</button>
 </div>
 
@@ -1166,7 +1213,7 @@
 <div class="panel" id="whatsnewPanel">
   <div class="whatsnew-card">
     <div class="chart-title">Curated Updates</div>
-    <div class="wn-version" id="wnVersion">v0.1.0</div>
+    <div class="wn-version" id="wnVersion">v0.5.0</div>
 
     <div class="wn-section">
       <div class="wn-section-title">Highlights</div>

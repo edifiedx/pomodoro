@@ -4,9 +4,12 @@ Curated rolling updates for the in-app changelog view.
 Keep this concise and user-facing. Suggested max: last 8 to 12 entries.
 
 ## Current Version
-0.4.0
+0.5.0
 
 ## Highlights
+- New stacked 7-day overview chart is back in Stats.
+- 24h timeline now appears before the 7-day chart for faster daily-state reading.
+- Stats cards were tightened and rebalanced for denser at-a-glance scanning.
 - Long break now defaults to 30 minutes for new installs.
 - The in-app "Open Full" action now opens the full changelog.
 - Notification onboarding now appears on first Start, with a plain explanation before requesting permission.

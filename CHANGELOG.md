@@ -8,6 +8,15 @@ All notable changes to this project will be documented in this file.
 - Timer recovery and stale-session boundary flow improvements
 - Session controls redesign (`New` / `Stop` / `Reset` / `Next`)
 
+## [0.5.0] - 2026-06-30
+
+### Added
+- New stacked `7-Day Overview` chart for state-based daily comparison
+
+### Changed
+- Stats panel order updated so the `24h State Timeline` appears above the 7-day overview
+- Stats cards/layout refined for better scanning density
+
 ## [0.4.0] - 2026-06-29
 
 ### Changed
