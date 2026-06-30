@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 - Timer recovery and stale-session boundary flow improvements
 - Session controls redesign (`New` / `Stop` / `Reset` / `Next`)
 
+## [0.5.1] - 2026-06-30
+
+### Fixed
+- SVG accretion disk `disk-glow` filter now applied once per group instead of per path, reducing GPU filter operations from ~40 to 4 per frame — eliminates video playback interference in other browser tabs when multiple instances are visible simultaneously
+- Canvas star field animation now pauses when the tab is hidden
+
 ## [0.5.0] - 2026-06-30
 
 ### Added

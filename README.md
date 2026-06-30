@@ -80,4 +80,4 @@ python -m http.server
 
 This project uses [semantic versioning](https://semver.org). See [CHANGELOG.md](CHANGELOG.md) for the full history.
 
-Current version: **0.5.0**
+Current version: **0.5.1**

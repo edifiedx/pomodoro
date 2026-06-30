@@ -86,6 +86,8 @@
 
 - **Audio node accumulation** (`audio.js`): `beep()` creates an `OscillatorNode` + `GainNode` on every call and schedules `.stop()` but never calls `.disconnect()`. Nodes accumulate in the AudioContext graph. Fix: attach an `osc.onended` handler that calls `osc.disconnect()` and `gain.disconnect()`.
 
+- **Star field FPS cap setting**: Add a canvas framerate cap to Settings — either a 60/30 toggle or a numeric input (e.g. 60/30/15). Useful for users running multiple instances or on lower-end hardware. Wire into `stars.js` via a `CFG` property and a simple timestamp gate in `draw()`.
+
 - **Stars RAF gradient allocs** (`stars.js`): Per-frame particle mutation is in-place (no array churn). However, during the eruption flash window the loop calls `ctx.createRadialGradient(...)` and two `.toFixed(3)` string coercions every frame. These are short-lived but worth noting if GC spikes are observed during the erupt phase. Longer-term heap growth (50 MB → 300 MB) is more likely the audio node accumulation above.
 
 - **Alarm interval safety** (`app.js`): `armAlarm()` calls `clearInterval(alarmId)` before arming, and `dismissAlarm()` clears it when `alarmPending` is true. Verify there is no path where `armAlarm()` is called while `alarmId` is already set and `alarmPending` is false (e.g. rapid setAlarmStyle toggle during idle) — the existing guard looks adequate but should be audited.

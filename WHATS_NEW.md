@@ -4,9 +4,10 @@ Curated rolling updates for the in-app changelog view.
 Keep this concise and user-facing. Suggested max: last 8 to 12 entries.
 
 ## Current Version
-0.5.0
+0.5.1
 
 ## Highlights
+- Performance: fixed GPU overload when multiple instances are visible — no more video playback interference in other tabs.
 - New stacked 7-day overview chart is back in Stats.
 - 24h timeline now appears before the 7-day chart for faster daily-state reading.
 - Stats cards were tightened and rebalanced for denser at-a-glance scanning.

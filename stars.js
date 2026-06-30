@@ -237,8 +237,12 @@
       ctx.fill();
     }
 
-    requestAnimationFrame(draw);
+    if (!document.hidden) requestAnimationFrame(draw);
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) requestAnimationFrame(draw);
+  });
 
   window.starCollapse = function() {
     if (spiralState !== 'idle') return;
