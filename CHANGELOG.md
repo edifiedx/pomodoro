@@ -8,6 +8,19 @@ All notable changes to this project will be documented in this file.
 - Timer recovery and stale-session boundary flow improvements
 - Session controls redesign (`New` / `Stop` / `Reset` / `Next`)
 
+## [0.6.0] - 2026-07-01
+
+### Added
+- Star field FPS control in Settings (`60`/`30`) persisted via `CFG.starsFps`
+- Data transparency notice in Settings plus a destructive `Clear all data` action (IndexedDB + relevant localStorage keys)
+- Date-stamped What's New highlights and a "since last visit" badge on the header button
+
+### Changed
+- 24h timeline day ordering now renders Today first (top row), then previous days below
+
+### Fixed
+- What's New panel open state now clears badge by recording last-visit date and immediately removing indicator
+
 ## [0.5.1] - 2026-06-30
 
 ### Fixed

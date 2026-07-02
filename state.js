@@ -24,6 +24,7 @@ const CFG = {
   alarmAutoEndMins:   30,
   dotMode:            'cycle',
   toastsEnabled:      true,
+  starsFps:           60,
 };
 
 const S = {

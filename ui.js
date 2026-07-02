@@ -345,13 +345,7 @@ window.addEventListener('beforeunload', closeLastNotification);
 let activePanel = null;
 let whatsNewCache = null;
 
-function pushListItem(listEl, text) {
-  if (!listEl) return;
-  const li = document.createElement('li');
-  li.className = 'wn-item';
-  li.textContent = text;
-  listEl.appendChild(li);
-}
+const WN_LAST_VISIT_KEY = 'pomo-wn-last-visit';
 
 function renderWhatsNew(data) {
   const versionEl = document.getElementById('wnVersion');
@@ -369,7 +363,18 @@ function renderWhatsNew(data) {
     msg.textContent = 'No highlights yet.';
     highlightsEl.appendChild(msg);
   } else {
-    data.highlights.forEach(item => pushListItem(highlightsEl, item));
+    data.highlights.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'wn-item';
+      if (item.date) {
+        const d = document.createElement('span');
+        d.className = 'wn-date';
+        d.textContent = item.date;
+        li.appendChild(d);
+      }
+      li.appendChild(document.createTextNode(item.text));
+      highlightsEl.appendChild(li);
+    });
   }
 
   if (!data.nextUp.length) {
@@ -378,13 +383,19 @@ function renderWhatsNew(data) {
     msg.textContent = 'No upcoming items listed.';
     nextUpEl.appendChild(msg);
   } else {
-    data.nextUp.forEach(item => pushListItem(nextUpEl, item));
+    data.nextUp.forEach(text => {
+      const li = document.createElement('li');
+      li.className = 'wn-item';
+      li.textContent = text;
+      nextUpEl.appendChild(li);
+    });
   }
 }
 
 function parseWhatsNewMarkdown(md) {
+  const DATE_RE = /^\*\*(\d{4}-\d{2}-\d{2})\*\*\s*/;
   const lines = md.split(/\r?\n/);
-  const parsed = { version: '0.1.0', highlights: [], nextUp: [] };
+  const parsed = { version: '0.1.0', highlights: [], nextUp: [], latestDate: null };
   let section = '';
 
   for (const raw of lines) {
@@ -403,10 +414,16 @@ function parseWhatsNewMarkdown(md) {
       continue;
     }
     if (line.startsWith('- ')) {
-      const item = line.slice(2).trim();
-      if (!item) continue;
-      if (section === 'highlights') parsed.highlights.push(item);
-      if (section === 'nextUp') parsed.nextUp.push(item);
+      const rawItem = line.slice(2).trim();
+      if (!rawItem) continue;
+      if (section === 'highlights') {
+        const m = rawItem.match(DATE_RE);
+        const date = m ? m[1] : null;
+        const text = m ? rawItem.slice(m[0].length) : rawItem;
+        parsed.highlights.push({ date, text });
+        if (date && (!parsed.latestDate || date > parsed.latestDate)) parsed.latestDate = date;
+      }
+      if (section === 'nextUp') parsed.nextUp.push(rawItem);
     }
   }
 
@@ -425,12 +442,26 @@ async function loadWhatsNew() {
     whatsNewCache = parseWhatsNewMarkdown(md);
   } catch (e) {
     whatsNewCache = {
-      version: '0.1.0',
-      highlights: ['Could not load WHATS_NEW.md in this environment.'],
+      version: '0.1.0', latestDate: null,
+      highlights: [{ date: null, text: 'Could not load WHATS_NEW.md in this environment.' }],
       nextUp: ['Open the WHATS_NEW.md file directly for details.'],
     };
   }
   renderWhatsNew(whatsNewCache);
+}
+
+async function checkWhatsNewBadge() {
+  try {
+    if (!whatsNewCache) {
+      const res = await fetch('WHATS_NEW.md', { cache: 'no-store' });
+      if (!res.ok) return;
+      whatsNewCache = parseWhatsNewMarkdown(await res.text());
+    }
+    const lastVisit = localStorage.getItem(WN_LAST_VISIT_KEY);
+    if (whatsNewCache.latestDate && (!lastVisit || lastVisit < whatsNewCache.latestDate)) {
+      document.getElementById('whatsNewBtnEl').classList.add('has-badge');
+    }
+  } catch (e) {}
 }
 
 function togglePanel(name) {
@@ -448,7 +479,11 @@ function togglePanel(name) {
   if (name === 'whatsnew') document.getElementById('whatsNewBtnEl').classList.add('on');
   if (name === 'stats')    loadStats();
   if (name === 'settings') updateNotifStatus();
-  if (name === 'whatsnew') loadWhatsNew();
+  if (name === 'whatsnew') {
+    localStorage.setItem(WN_LAST_VISIT_KEY, new Date().toISOString().slice(0, 10));
+    document.getElementById('whatsNewBtnEl').classList.remove('has-badge');
+    loadWhatsNew();
+  }
 }
 
 /* ── Toast ── */
@@ -731,7 +766,7 @@ function renderTimelineStrips(sessions) {
   };
   const hideTip = () => { tip.style.display = 'none'; };
 
-  for (let i = 6; i >= 0; i--) {
+  for (let i = 0; i <= 6; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();

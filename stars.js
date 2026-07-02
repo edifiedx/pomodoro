@@ -4,6 +4,7 @@
   const ctx    = canvas.getContext('2d');
 
   let W, H;
+  let lastFrameTs = 0;
   const mouse = { x: -9999, y: -9999 };
   const warp  = { x: -9999, y: -9999 };
   const EASE  = 0.04;
@@ -114,6 +115,13 @@
   }
 
   function draw(ts) {
+    const minInterval = 1000 / ((typeof CFG !== 'undefined' && CFG.starsFps) || 60);
+    if (ts - lastFrameTs < minInterval) {
+      if (!document.hidden) requestAnimationFrame(draw);
+      return;
+    }
+    lastFrameTs = ts;
+
     const t = ts * 0.001;
 
     warp.x += (mouse.x - warp.x) * EASE;

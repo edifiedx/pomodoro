@@ -457,12 +457,26 @@ function setToasts(on) {
   savePrefs();
 }
 
+function setStarsFps(v) {
+  CFG.starsFps = v;
+  document.getElementById('starsFps60El').classList.toggle('on', v === 60);
+  document.getElementById('starsFps30El').classList.toggle('on', v === 30);
+  savePrefs();
+}
+
 function resetDotCount() {
   S.totalWorkEver = 0;
   S.cycleWorkDone = 0;
   savePrefs();
   renderDots();
   showToast('Dot count reset');
+}
+
+function clearAllData() {
+  if (!confirm('Delete all session history and reset all preferences? This cannot be undone.')) return;
+  ['pomo-runtime-v1', 'pomo-prefs-v2', 'pomo-notif-prompted', 'pomo-wn-last-visit'].forEach(k => localStorage.removeItem(k));
+  indexedDB.deleteDatabase('pomodoro-v1');
+  location.reload();
 }
 
 /* ── Settings ── */
@@ -516,12 +530,14 @@ function loadPrefs() {
     if (p.alarmAutoEndMins != null)   CFG.alarmAutoEndMins   = p.alarmAutoEndMins;
     if (p.dotMode != null)            CFG.dotMode            = p.dotMode;
     if (p.toastsEnabled != null)      CFG.toastsEnabled      = p.toastsEnabled;
+    if (p.starsFps != null)           CFG.starsFps           = p.starsFps;
     if (p.totalWorkEver != null)      S.totalWorkEver        = p.totalWorkEver;
     if (p.cycleWorkDone != null)      S.cycleWorkDone        = p.cycleWorkDone;
     if (p.advanceMode)                setMode(p.advanceMode);
     if (p.alarmStyle)                 setAlarmStyle(p.alarmStyle);
     setDotMode(CFG.dotMode);
     setToasts(CFG.toastsEnabled);
+    setStarsFps(CFG.starsFps);
 
     document.getElementById('cfgWork').value     = CFG.workMins;
     document.getElementById('cfgShort').value    = CFG.shortBreakMins;
@@ -578,6 +594,7 @@ async function init() {
   labelEl.classList.toggle('is-default', S.currentLabel === DEFAULT_LABEL);
 
   updateNotifStatus();
+  checkWhatsNewBadge();
 }
 
 init();

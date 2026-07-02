@@ -622,10 +622,28 @@
       border-left: 1px solid var(--rim);
       padding-left: 10px;
     }
+    .wn-date {
+      font-size: 10px;
+      color: var(--muted);
+      margin-right: 6px;
+      font-variant-numeric: tabular-nums;
+    }
     .wn-empty {
       font-family: 'IBM Plex Sans', sans-serif;
       font-size: 11px;
       color: var(--nebula);
+    }
+    #whatsNewBtnEl.has-badge::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: 5px;
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
     }
 
     .delay-card { margin-bottom: 20px; }
@@ -721,6 +739,9 @@
     }
     .flat-btn:hover { color: var(--star); border-color: var(--nebula); }
     .flat-btn + .flat-btn { margin-top: 8px; }
+    .flat-btn-danger { color: #c0392b; border-color: #c0392b44; }
+    .flat-btn-danger:hover { color: #e74c3c; border-color: #e74c3c; }
+    .data-notice { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 16px; }
 
     /* Settings */
     .settings-group { border-top: 1px solid var(--rim); margin-bottom: 24px; }
@@ -1213,7 +1234,7 @@
 <div class="panel" id="whatsnewPanel">
   <div class="whatsnew-card">
     <div class="chart-title">Curated Updates</div>
-    <div class="wn-version" id="wnVersion">v0.5.1</div>
+    <div class="wn-version" id="wnVersion">v0.6.0</div>
 
     <div class="wn-section">
       <div class="wn-section-title">Highlights</div>
@@ -1276,6 +1297,13 @@
       </div>
     </div>
     <div class="setting-row">
+      <label>Star field FPS</label>
+      <div class="pill">
+        <button class="pill-opt on" id="starsFps60El" onclick="setStarsFps(60)">60</button>
+        <button class="pill-opt"    id="starsFps30El" onclick="setStarsFps(30)">30</button>
+      </div>
+    </div>
+    <div class="setting-row">
       <label>Browser notifications</label>
       <button class="notif-status" id="notifStatusEl" onclick="requestNotifications()">Enable</button>
     </div>
@@ -1283,6 +1311,8 @@
   </div>
   <button class="apply-btn" onclick="applySettings()">Apply Settings</button>
   <button class="flat-btn" style="margin-top:10px" onclick="resetDotCount()">Reset dot count</button>
+  <div class="data-notice">Session records and preferences are stored locally in your browser (IndexedDB + localStorage). Nothing leaves your device — no accounts, no servers.</div>
+  <button class="flat-btn flat-btn-danger" style="margin-top:6px" onclick="clearAllData()">Clear all data</button>
 </div>
 
 <div class="notif-modal-backdrop" id="notifModalEl">
