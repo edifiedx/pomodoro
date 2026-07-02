@@ -353,27 +353,51 @@ function renderWhatsNew(data) {
   const nextUpEl = document.getElementById('wnNextUp');
   if (!versionEl || !highlightsEl || !nextUpEl) return;
 
-  versionEl.textContent = `v${data.version || '0.1.0'}`;
+  const latestRelease = data.releases && data.releases[0];
+  versionEl.textContent = latestRelease
+    ? `v${latestRelease.version}${latestRelease.date ? ` - ${latestRelease.date}` : ''}`
+    : `v${data.version || '0.1.0'}`;
   highlightsEl.innerHTML = '';
   nextUpEl.innerHTML = '';
 
-  if (!data.highlights.length) {
+  if (!data.releases.length) {
     const msg = document.createElement('div');
     msg.className = 'wn-empty';
     msg.textContent = 'No highlights yet.';
     highlightsEl.appendChild(msg);
   } else {
-    data.highlights.forEach(item => {
-      const li = document.createElement('li');
-      li.className = 'wn-item';
-      if (item.date) {
-        const d = document.createElement('span');
-        d.className = 'wn-date';
-        d.textContent = item.date;
-        li.appendChild(d);
+    data.releases.forEach(release => {
+      const block = document.createElement('div');
+      block.className = 'wn-release';
+
+      const head = document.createElement('div');
+      head.className = 'wn-release-head';
+
+      const title = document.createElement('div');
+      title.className = 'wn-release-title';
+      title.textContent = `v${release.version}`;
+
+      const date = document.createElement('div');
+      date.className = 'wn-release-date';
+      date.textContent = release.date || '';
+
+      head.appendChild(title);
+      if (release.date) head.appendChild(date);
+      block.appendChild(head);
+
+      if (release.items && release.items.length) {
+        const list = document.createElement('ul');
+        list.className = 'wn-list wn-release-list';
+        release.items.forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'wn-item';
+          li.textContent = item;
+          list.appendChild(li);
+        });
+        block.appendChild(list);
       }
-      li.appendChild(document.createTextNode(item.text));
-      highlightsEl.appendChild(li);
+
+      highlightsEl.appendChild(block);
     });
   }
 
@@ -394,9 +418,11 @@ function renderWhatsNew(data) {
 
 function parseWhatsNewMarkdown(md) {
   const DATE_RE = /^\*\*(\d{4}-\d{2}-\d{2})\*\*\s*/;
+  const RELEASE_RE = /^v?(\d+\.\d+\.\d+)(?:\s*[-–]\s*(\d{4}-\d{2}-\d{2}))?$/i;
   const lines = md.split(/\r?\n/);
-  const parsed = { version: '0.1.0', highlights: [], nextUp: [], latestDate: null };
+  const parsed = { version: '0.1.0', releases: [], nextUp: [], latestDate: null };
   let section = '';
+  let currentRelease = null;
 
   for (const raw of lines) {
     const line = raw.trim();
@@ -409,6 +435,20 @@ function parseWhatsNewMarkdown(md) {
       else section = '';
       continue;
     }
+    if (section === 'highlights' && /^###?\s+/.test(line)) {
+      const head = line.replace(/^###?\s+/, '');
+      const match = head.match(RELEASE_RE);
+      if (match) {
+        currentRelease = { version: match[1], date: match[2] || null, items: [] };
+        parsed.releases.push(currentRelease);
+        if (currentRelease.date && (!parsed.latestDate || currentRelease.date > parsed.latestDate)) {
+          parsed.latestDate = currentRelease.date;
+        }
+      } else {
+        currentRelease = null;
+      }
+      continue;
+    }
     if (section === 'version' && !line.startsWith('-')) {
       parsed.version = line.replace(/^v/i, '');
       continue;
@@ -416,12 +456,10 @@ function parseWhatsNewMarkdown(md) {
     if (line.startsWith('- ')) {
       const rawItem = line.slice(2).trim();
       if (!rawItem) continue;
-      if (section === 'highlights') {
+      if (section === 'highlights' && currentRelease) {
         const m = rawItem.match(DATE_RE);
-        const date = m ? m[1] : null;
         const text = m ? rawItem.slice(m[0].length) : rawItem;
-        parsed.highlights.push({ date, text });
-        if (date && (!parsed.latestDate || date > parsed.latestDate)) parsed.latestDate = date;
+        currentRelease.items.push(text);
       }
       if (section === 'nextUp') parsed.nextUp.push(rawItem);
     }
@@ -443,7 +481,7 @@ async function loadWhatsNew() {
   } catch (e) {
     whatsNewCache = {
       version: '0.1.0', latestDate: null,
-      highlights: [{ date: null, text: 'Could not load WHATS_NEW.md in this environment.' }],
+      releases: [{ version: '0.1.0', date: null, items: ['Could not load WHATS_NEW.md in this environment.'] }],
       nextUp: ['Open the WHATS_NEW.md file directly for details.'],
     };
   }

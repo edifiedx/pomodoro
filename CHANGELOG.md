@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 - Timer recovery and stale-session boundary flow improvements
 - Session controls redesign (`New` / `Stop` / `Reset` / `Next`)
 
+## [0.6.1] - 2026-07-01
+
+### Changed
+- What's New now groups highlights by release version and date instead of showing one flat dated list
+- Curated updates header now shows the latest release version/date as a single release line
+
 ## [0.6.0] - 2026-07-01
 
 ### Added

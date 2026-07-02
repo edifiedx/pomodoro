@@ -598,7 +598,28 @@
       color: var(--star);
       margin-bottom: 14px;
     }
-    .wn-section + .wn-section { margin-top: 16px; }
+    .wn-release + .wn-release { margin-top: 16px; }
+    .wn-release-head {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .wn-release-title {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--nebula);
+    }
+    .wn-release-date {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 10px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .wn-release-list + .wn-release-list { margin-top: 14px; }
     .wn-section-title {
       font-family: 'IBM Plex Sans', sans-serif;
       font-size: 9px;
@@ -1234,12 +1255,9 @@
 <div class="panel" id="whatsnewPanel">
   <div class="whatsnew-card">
     <div class="chart-title">Curated Updates</div>
-    <div class="wn-version" id="wnVersion">v0.6.0</div>
+    <div class="wn-version" id="wnVersion">v0.6.1</div>
 
-    <div class="wn-section">
-      <div class="wn-section-title">Highlights</div>
-      <ul class="wn-list" id="wnHighlights"></ul>
-    </div>
+    <div id="wnHighlights"></div>
 
     <div class="wn-section">
       <div class="wn-section-title">Next Up</div>
